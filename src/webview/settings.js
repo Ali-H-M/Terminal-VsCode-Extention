@@ -6,24 +6,47 @@
   let editingProfile = null; // null = list view, object = editing
   let pendingDeleteId = null; // track delete confirmation
 
-  // Icons available for terminals
+  // Icons available for terminals (with emoji previews)
   const ICON_OPTIONS = [
-    { value: '', label: 'Default' },
-    { value: 'terminal', label: 'Terminal' },
-    { value: 'flame', label: 'Flame' },
-    { value: 'zap', label: 'Zap' },
-    { value: 'server', label: 'Server' },
-    { value: 'database', label: 'Database' },
-    { value: 'globe', label: 'Globe' },
-    { value: 'bug', label: 'Bug' },
-    { value: 'beaker', label: 'Beaker' },
-    { value: 'rocket', label: 'Rocket' },
-    { value: 'gear', label: 'Gear' },
-    { value: 'tools', label: 'Tools' },
-    { value: 'heart', label: 'Heart' },
-    { value: 'star', label: 'Star' },
-    { value: 'play', label: 'Play' },
-    { value: 'debug-console', label: 'Debug Console' },
+    { value: '', label: 'Default', emoji: '' },
+    // Developer essentials
+    { value: 'terminal', label: 'Terminal', emoji: '\uD83D\uDCBB' },
+    { value: 'code', label: 'Code', emoji: '\uD83D\uDCDD' },
+    { value: 'file-code', label: 'File Code', emoji: '\uD83D\uDCC4' },
+    { value: 'symbol-namespace', label: 'Namespace', emoji: '\uD83D\uDCE6' },
+    { value: 'package', label: 'Package', emoji: '\uD83D\uDCE6' },
+    // Infrastructure
+    { value: 'server', label: 'Server', emoji: '\uD83D\uDDA5\uFE0F' },
+    { value: 'database', label: 'Database', emoji: '\uD83D\uDDC4\uFE0F' },
+    { value: 'cloud', label: 'Cloud', emoji: '\u2601\uFE0F' },
+    { value: 'globe', label: 'Globe', emoji: '\uD83C\uDF10' },
+    { value: 'vm', label: 'Container', emoji: '\uD83D\uDCE5' },
+    // Testing & debugging
+    { value: 'bug', label: 'Bug', emoji: '\uD83D\uDC1B' },
+    { value: 'beaker', label: 'Test', emoji: '\uD83E\uDDEA' },
+    { value: 'debug-console', label: 'Debug', emoji: '\uD83D\uDD0D' },
+    { value: 'debug-alt', label: 'Debug Alt', emoji: '\uD83D\uDEE0\uFE0F' },
+    { value: 'checklist', label: 'Checklist', emoji: '\u2705' },
+    // Actions
+    { value: 'play', label: 'Run', emoji: '\u25B6\uFE0F' },
+    { value: 'rocket', label: 'Deploy', emoji: '\uD83D\uDE80' },
+    { value: 'flame', label: 'Flame', emoji: '\uD83D\uDD25' },
+    { value: 'zap', label: 'Zap', emoji: '\u26A1' },
+    { value: 'sync', label: 'Sync', emoji: '\uD83D\uDD04' },
+    // Tools
+    { value: 'gear', label: 'Gear', emoji: '\u2699\uFE0F' },
+    { value: 'tools', label: 'Tools', emoji: '\uD83D\uDD27' },
+    { value: 'wrench', label: 'Wrench', emoji: '\uD83D\uDD29' },
+    { value: 'key', label: 'Key', emoji: '\uD83D\uDD11' },
+    { value: 'lock', label: 'Lock', emoji: '\uD83D\uDD12' },
+    { value: 'shield', label: 'Shield', emoji: '\uD83D\uDEE1\uFE0F' },
+    // Misc
+    { value: 'star', label: 'Star', emoji: '\u2B50' },
+    { value: 'heart', label: 'Heart', emoji: '\u2764\uFE0F' },
+    { value: 'eye', label: 'Watch', emoji: '\uD83D\uDC41\uFE0F' },
+    { value: 'bookmark', label: 'Bookmark', emoji: '\uD83D\uDD16' },
+    { value: 'tag', label: 'Tag', emoji: '\uD83C\uDFF7\uFE0F' },
+    { value: 'coffee', label: 'Coffee', emoji: '\u2615' },
   ];
 
   const COLOR_OPTIONS = [
@@ -147,7 +170,7 @@
       name: '',
       groups: [
         {
-          split: false,
+          splitCount: 1,
           terminals: [{ name: '', commands: [''], icon: '', color: '' }],
         },
       ],
@@ -159,11 +182,12 @@
     const p = editingProfile;
 
     let groupsHtml = p.groups.map((group, gi) => {
-      function renderTerminalCard(term, ti, label) {
+      function renderTerminalCard(term, ti, label, showRemove) {
         return `
           <div class="terminal-card">
             <div class="terminal-card-header">
               <strong>${escapeHtml(label)}</strong>
+              ${showRemove ? `<button class="small secondary" data-remove-split="${gi}-${ti}" title="Remove this panel">\u00D7</button>` : ''}
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -175,7 +199,7 @@
                 <label>Icon</label>
                 <select data-field="terminal-icon" data-gi="${gi}" data-ti="${ti}">
                   ${ICON_OPTIONS.map(o =>
-                    `<option value="${o.value}" ${term.icon === o.value ? 'selected' : ''}>${o.label}</option>`
+                    `<option value="${o.value}" ${term.icon === o.value ? 'selected' : ''}>${o.emoji ? o.emoji + ' ' : ''}${o.label}</option>`
                   ).join('')}
                 </select>
               </div>
@@ -197,27 +221,35 @@
         `;
       }
 
+      const count = group.splitCount || 1;
+      const panelLabels = ['Left', 'Center Left', 'Center Right', 'Right'];
       let terminalsHtml;
-      if (group.split) {
-        // Split mode: exactly 2 terminals shown side-by-side
-        const left = group.terminals[0] || { name: '', commands: [''], icon: '', color: '' };
-        const right = group.terminals[1] || { name: '', commands: [''], icon: '', color: '' };
-        terminalsHtml = `
-          <div class="split-container">
-            <div class="split-pane">
-              ${renderTerminalCard(left, 0, 'Left Panel')}
-            </div>
-            <div class="split-divider"></div>
-            <div class="split-pane">
-              ${renderTerminalCard(right, 1, 'Right Panel')}
-            </div>
-          </div>
-        `;
-      } else {
-        // Normal mode: single terminal
+
+      if (count === 1) {
         const term = group.terminals[0] || { name: '', commands: [''], icon: '', color: '' };
-        terminalsHtml = renderTerminalCard(term, 0, 'Terminal');
+        terminalsHtml = renderTerminalCard(term, 0, 'Terminal', false);
+      } else {
+        // Build N panes side-by-side
+        let panes = '';
+        for (let ti = 0; ti < count; ti++) {
+          const term = group.terminals[ti] || { name: '', commands: [''], icon: '', color: '' };
+          let label;
+          if (count === 2) {
+            label = ti === 0 ? 'Left Panel' : 'Right Panel';
+          } else if (count === 3) {
+            label = ['Left', 'Center', 'Right'][ti] + ' Panel';
+          } else {
+            label = panelLabels[ti] + ' Panel';
+          }
+          if (ti > 0) panes += '<div class="split-divider"></div>';
+          panes += `<div class="split-pane">${renderTerminalCard(term, ti, label, count > 1)}</div>`;
+        }
+        terminalsHtml = `<div class="split-container split-${count}">${panes}</div>`;
       }
+
+      const splitOptions = [1, 2, 3, 4].map(n =>
+        `<option value="${n}" ${count === n ? 'selected' : ''}>${n === 1 ? 'No split (single terminal)' : n + ' panels side-by-side'}</option>`
+      ).join('');
 
       return `
         <div class="group-section">
@@ -227,10 +259,9 @@
               ? `<button class="small secondary" data-remove-group="${gi}">Remove Group</button>`
               : ''}
           </div>
-          <div class="toggle-row">
-            <input type="checkbox" id="split-${gi}" data-field="group-split" data-gi="${gi}"
-                   ${group.split ? 'checked' : ''} />
-            <label for="split-${gi}">Split terminal (side-by-side)</label>
+          <div class="form-group split-select-row">
+            <label>Terminal Layout</label>
+            <select data-field="group-split" data-gi="${gi}">${splitOptions}</select>
           </div>
           ${terminalsHtml}
         </div>
@@ -281,23 +312,29 @@
       });
     });
 
-    // Group split toggles
+    // Remove split pane buttons
+    document.querySelectorAll('[data-remove-split]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const [gi, ti] = e.currentTarget.getAttribute('data-remove-split').split('-').map(Number);
+        const group = editingProfile.groups[gi];
+        group.terminals.splice(ti, 1);
+        group.splitCount = Math.max(1, group.splitCount - 1);
+        renderEditor();
+      });
+    });
+
+    // Group split count dropdown
     document.querySelectorAll('[data-field="group-split"]').forEach(el => {
       const gi = parseInt(el.getAttribute('data-gi'));
       el.addEventListener('change', (e) => {
         const group = editingProfile.groups[gi];
-        group.split = e.target.checked;
-        if (group.split) {
-          // Ensure exactly 2 terminals for split mode
-          while (group.terminals.length < 2) {
-            group.terminals.push({ name: '', commands: [''], icon: '', color: '' });
-          }
-          // Trim to 2 if more
-          group.terminals = group.terminals.slice(0, 2);
-        } else {
-          // Collapse to 1 terminal (keep the first)
-          group.terminals = group.terminals.slice(0, 1);
+        const newCount = parseInt(e.target.value);
+        group.splitCount = newCount;
+        // Adjust terminals array to match new count
+        while (group.terminals.length < newCount) {
+          group.terminals.push({ name: '', commands: [''], icon: '', color: '' });
         }
+        group.terminals = group.terminals.slice(0, newCount);
         renderEditor();
       });
     });
@@ -305,7 +342,7 @@
     // Add group
     document.getElementById('btn-add-group')?.addEventListener('click', () => {
       editingProfile.groups.push({
-        split: false,
+        splitCount: 1,
         terminals: [{ name: '', commands: [''], icon: '', color: '' }],
       });
       renderEditor();

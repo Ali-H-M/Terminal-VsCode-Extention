@@ -9,7 +9,7 @@ export interface TerminalConfig {
 /** A group of terminals that may be split side-by-side */
 export interface TerminalGroup {
   terminals: TerminalConfig[];
-  split: boolean;
+  splitCount: number; // 1 = single terminal, 2-4 = number of split panes
 }
 
 /** A named, saveable profile */

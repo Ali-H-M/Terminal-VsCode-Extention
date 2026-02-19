@@ -29,7 +29,7 @@ export class TerminalManager {
 
     for (let i = 0; i < group.terminals.length; i++) {
       const config = group.terminals[i];
-      const shouldSplit = group.split && i > 0 && previousTerminal !== undefined;
+      const shouldSplit = group.splitCount > 1 && i > 0 && previousTerminal !== undefined;
 
       let terminal: vscode.Terminal;
 

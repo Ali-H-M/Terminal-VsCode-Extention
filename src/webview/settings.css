@@ -176,23 +176,13 @@ label {
   margin-bottom: 0;
 }
 
-/* Split toggle */
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+/* Split layout selector */
+.split-select-row {
+  margin-bottom: 12px;
 }
 
-.toggle-row input[type="checkbox"] {
-  width: auto;
-  cursor: pointer;
-}
-
-.toggle-row label {
-  display: inline;
-  margin-bottom: 0;
-  cursor: pointer;
+.split-select-row select {
+  max-width: 280px;
 }
 
 /* Terminal config card */
@@ -243,6 +233,29 @@ label {
   margin: 0 2px;
   border-radius: 2px;
   flex-shrink: 0;
+}
+
+/* Compact layout for 3-4 panes */
+.split-3 .terminal-card,
+.split-4 .terminal-card {
+  padding: 10px;
+}
+
+.split-3 .form-row,
+.split-4 .form-row {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.split-3 .form-row > .form-group,
+.split-4 .form-row > .form-group {
+  flex: 1 1 auto;
+  min-width: 60px;
+}
+
+.split-3 textarea,
+.split-4 textarea {
+  min-height: 45px;
 }
 
 /* Delete confirmation */
