@@ -1,0 +1,30 @@
+/** A single terminal within a group */
+export interface TerminalConfig {
+  name: string;
+  commands: string[];
+  icon?: string;   // ThemeIcon id, e.g. "flame", "zap", "terminal"
+  color?: string;  // ThemeColor id, e.g. "terminal.ansiRed"
+}
+
+/** A group of terminals that may be split side-by-side */
+export interface TerminalGroup {
+  terminals: TerminalConfig[];
+  split: boolean;
+}
+
+/** A named, saveable profile */
+export interface Profile {
+  id: string;
+  name: string;
+  groups: TerminalGroup[];
+}
+
+/** Messages sent between extension and webview */
+export type WebviewMessage =
+  | { command: 'getProfiles' }
+  | { command: 'saveProfile'; profile: Profile }
+  | { command: 'deleteProfile'; profileId: string }
+  | { command: 'launchProfile'; profileId: string }
+  | { command: 'profilesLoaded'; profiles: Profile[] }
+  | { command: 'profileSaved'; profile: Profile }
+  | { command: 'error'; message: string };
