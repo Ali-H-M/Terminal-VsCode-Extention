@@ -29,7 +29,7 @@ export class SettingsWebview {
         enableScripts: true,
         retainContextWhenHidden: true,
         localResourceRoots: [
-          vscode.Uri.file(path.join(context.extensionPath, 'src', 'webview')),
+          vscode.Uri.file(path.join(context.extensionPath, 'webview')),
         ],
       }
     );
@@ -110,12 +110,12 @@ export class SettingsWebview {
 
     const styleUri = webview.asWebviewUri(
       vscode.Uri.file(
-        path.join(this.context.extensionPath, 'src', 'webview', 'settings.css')
+        path.join(this.context.extensionPath, 'webview', 'settings.css')
       )
     );
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.file(
-        path.join(this.context.extensionPath, 'src', 'webview', 'settings.js')
+        path.join(this.context.extensionPath, 'webview', 'settings.js')
       )
     );
 

@@ -47,7 +47,7 @@ class SettingsWebview {
             enableScripts: true,
             retainContextWhenHidden: true,
             localResourceRoots: [
-                vscode.Uri.file(path.join(context.extensionPath, 'src', 'webview')),
+                vscode.Uri.file(path.join(context.extensionPath, 'webview')),
             ],
         });
         SettingsWebview.currentPanel = new SettingsWebview(panel, context, profileManager, terminalManager);
@@ -105,8 +105,8 @@ class SettingsWebview {
     getHtmlContent() {
         const webview = this.panel.webview;
         const nonce = getNonce();
-        const styleUri = webview.asWebviewUri(vscode.Uri.file(path.join(this.context.extensionPath, 'src', 'webview', 'settings.css')));
-        const scriptUri = webview.asWebviewUri(vscode.Uri.file(path.join(this.context.extensionPath, 'src', 'webview', 'settings.js')));
+        const styleUri = webview.asWebviewUri(vscode.Uri.file(path.join(this.context.extensionPath, 'webview', 'settings.css')));
+        const scriptUri = webview.asWebviewUri(vscode.Uri.file(path.join(this.context.extensionPath, 'webview', 'settings.js')));
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
