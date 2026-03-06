@@ -1,22 +1,22 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function (o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+        desc = { enumerable: true, get: function () { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
+}) : (function (o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function (o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
+}) : function (o, v) {
     o["default"] = v;
 });
 var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
+    var ownKeys = function (o) {
         ownKeys = Object.getOwnPropertyNames || function (o) {
             var ar = [];
             for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
@@ -89,17 +89,20 @@ class TerminalManager {
         // Focus the previous terminal so the split happens next to it
         previousTerminal.show();
         await this.delay(300);
-        // Split the active terminal
-        await vscode.commands.executeCommand('workbench.action.terminal.split');
+        // Use the internal 'new' command with splitActiveTerminal location
+        // This creates a split AND applies icon/color in one step
+        await vscode.commands.executeCommand('workbench.action.terminal.new', {
+            config: {
+                name: config.name || 'Terminal',
+                icon: config.icon ? { id: config.icon } : undefined,
+                color: config.color || undefined,
+            },
+            location: { splitActiveTerminal: true },
+        });
         await this.delay(400);
-        // The newly split terminal is now the active terminal
         const terminal = vscode.window.activeTerminal;
         if (!terminal) {
             throw new Error('Failed to create split terminal');
-        }
-        // Rename the split terminal
-        if (config.name) {
-            await vscode.commands.executeCommand('workbench.action.terminal.renameWithArg', { name: config.name });
         }
         return terminal;
     }

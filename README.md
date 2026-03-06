@@ -77,3 +77,12 @@ src/
 ## License
 
 MIT
+
+## Create Profile
+![Terminal Bulder](Profile-Config.png)
+
+## Contol Terminal Profiles
+![Terminal Launcher](Terminal-Launcher.png)
+
+## Result Example
+![Terminal Run](Terminal-Run.png)

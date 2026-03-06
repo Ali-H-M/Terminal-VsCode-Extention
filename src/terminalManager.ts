@@ -63,22 +63,21 @@ export class TerminalManager {
     previousTerminal.show();
     await this.delay(300);
 
-    // Split the active terminal
-    await vscode.commands.executeCommand('workbench.action.terminal.split');
+    // Use the internal 'new' command with splitActiveTerminal location
+    // This creates a split AND applies icon/color in one step
+    await vscode.commands.executeCommand('workbench.action.terminal.new', {
+      config: {
+        name: config.name || 'Terminal',
+        icon: config.icon ? { id: config.icon } : undefined,
+        color: config.color || undefined,
+      },
+      location: { splitActiveTerminal: true },
+    });
     await this.delay(400);
 
-    // The newly split terminal is now the active terminal
     const terminal = vscode.window.activeTerminal;
     if (!terminal) {
       throw new Error('Failed to create split terminal');
-    }
-
-    // Rename the split terminal
-    if (config.name) {
-      await vscode.commands.executeCommand(
-        'workbench.action.terminal.renameWithArg',
-        { name: config.name }
-      );
     }
 
     return terminal;

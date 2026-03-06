@@ -2,7 +2,7 @@
   "name": "terminal-profile-launcher",
   "displayName": "Terminal Profile Launcher",
   "description": "Launch multiple pre-configured terminal tabs with auto-run commands, split layouts, and saveable profiles",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "publisher": "Ali-H-M",
   "engines": {
     "vscode": "^1.85.0"
