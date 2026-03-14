@@ -101,6 +101,7 @@ class TerminalManager {
             name: config.name || 'Terminal',
             iconPath: config.icon ? new vscode.ThemeIcon(config.icon) : undefined,
             color: config.color ? new vscode.ThemeColor(config.color) : undefined,
+            cwd: config.cwd?.trim() || undefined,
         };
         return vscode.window.createTerminal(options);
     }
@@ -115,6 +116,7 @@ class TerminalManager {
                 name: config.name || 'Terminal',
                 icon: config.icon ? { id: config.icon } : undefined,
                 color: config.color || undefined,
+                cwd: config.cwd?.trim() || undefined,
             },
             location: { splitActiveTerminal: true },
         });

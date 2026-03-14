@@ -4,10 +4,10 @@ Save and launch sets of pre-configured terminals with a single command. Open mul
 
 ## Features
 
-- **Multiple terminals** — open several terminal tabs at once with a single command
+- **Multiple terminals** — open several terminal tabs at once
 - **Auto-run commands** — each terminal runs its commands automatically on launch
 - **Split terminals** — up to 4 panels side-by-side, each with its own commands
-- **Custom icons & colors** — assign any VS Code codicon and color for easy identification
+- **Custom icons & colors** — assign any VS Code icon and color for easy identification
 - **Saveable profiles** — name and save configurations, switch between projects instantly
 - **Import / Export** — back up profiles to JSON and share them across machines or with teammates
 - **Close on relaunch** — optionally close the previous terminals before reopening a profile
@@ -47,12 +47,12 @@ Quick Launch can be assign to Keyboard Shortcut:
 
 ### Profile Configuration
 
-![Terminal Builder](Profile-Config.png)
+![Terminal Builder](Profile-ConfigV1.2.png)
 
 ### Profile Manager
 
-![Terminal Launcher](Terminal-Launcher.png)
+![Terminal Launcher](Terminal-LauncherV1.2.png)
 
 ### Running Terminals
 
-![Terminal Run](Terminal-Run.png)
+![Terminal Run](Terminal-RunV1.2.png)

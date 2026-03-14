@@ -4,6 +4,7 @@ export interface TerminalConfig {
   commands: string[];
   icon?: string;   // ThemeIcon id, e.g. "flame", "zap", "terminal"
   color?: string;  // ThemeColor id, e.g. "terminal.ansiRed"
+  cwd?: string;    // Working directory, e.g. "./frontend" or "/absolute/path"
 }
 
 /** A group of terminals that may be split side-by-side */

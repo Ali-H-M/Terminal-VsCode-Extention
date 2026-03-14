@@ -426,6 +426,11 @@
               </div>
             </div>
             <div class="form-group" style="margin-top: 8px;">
+              <label>Working Directory <span class="field-hint">(optional — relative or absolute)</span></label>
+              <input type="text" data-field="terminal-cwd" data-gi="${gi}" data-ti="${ti}"
+                     value="${escapeHtml(term.cwd || '')}" placeholder="e.g. ./frontend or /home/user/project" />
+            </div>
+            <div class="form-group" style="margin-top: 8px;">
               <label>Commands (one per line, run in order)</label>
               <textarea data-field="terminal-commands" data-gi="${gi}" data-ti="${ti}"
                         placeholder="npm run dev">${escapeHtml(term.commands.join('\n'))}</textarea>
@@ -526,6 +531,8 @@
         const term = editingProfile.groups[gi].terminals[ti];
         if (field === 'terminal-name') {
           term.name = e.target.value;
+        } else if (field === 'terminal-cwd') {
+          term.cwd = e.target.value;
         } else if (field === 'terminal-commands') {
           term.commands = e.target.value.split('\n');
         }
