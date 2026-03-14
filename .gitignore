@@ -1,3 +1,7 @@
 /node_modules
 node_modules
 *.vsix
+
+/webview/setting-v2.css
+/webview/settings-v3.css
+/webview/settings-v5.css

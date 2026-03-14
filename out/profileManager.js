@@ -27,6 +27,11 @@ class ProfileManager {
         const profiles = this.getAllProfiles().filter(p => p.id !== id);
         await this.globalState.update(STORAGE_KEY, profiles);
     }
+    async reorderProfiles(ids) {
+        const profiles = this.getAllProfiles();
+        const reordered = ids.map(id => profiles.find(p => p.id === id)).filter((p) => !!p);
+        await this.globalState.update(STORAGE_KEY, reordered);
+    }
 }
 exports.ProfileManager = ProfileManager;
 //# sourceMappingURL=profileManager.js.map

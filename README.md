@@ -1,5 +1,7 @@
 # Terminal Launcher — VS Code Extension
 
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?logo=github-sponsors)](https://github.com/sponsors/Ali-H-M)
+
 Save and launch sets of pre-configured terminals with a single command. Open multiple tabs, split panels, auto-run commands, and keep everything organized with named profiles.
 
 ## Features

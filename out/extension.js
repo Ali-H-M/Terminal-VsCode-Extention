@@ -50,6 +50,11 @@ function activate(context) {
     statusBarItem.command = 'terminalLauncher.quickLaunch';
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
+    // Auto-launch profiles marked for auto-launch on workspace open
+    const autoLaunchProfiles = profileManager.getAllProfiles().filter(p => p.autoLaunch);
+    for (const profile of autoLaunchProfiles) {
+        terminalManager.launchProfile(profile);
+    }
     // Open the settings webview
     context.subscriptions.push(vscode.commands.registerCommand('terminalLauncher.openSettings', () => {
         settingsWebview_1.SettingsWebview.createOrShow(context, profileManager, terminalManager);
@@ -64,8 +69,9 @@ function activate(context) {
             }
             return;
         }
-        const picked = await vscode.window.showQuickPick(profiles.map(p => ({
-            label: p.name,
+        const sorted = [...profiles].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+        const picked = await vscode.window.showQuickPick(sorted.map(p => ({
+            label: (p.pinned ? '$(pinned) ' : '') + p.name,
             description: `${p.groups.length} group(s), ${p.groups.reduce((s, g) => s + g.terminals.length, 0)} terminal(s)`,
             id: p.id,
         })), { placeHolder: 'Select a profile to launch' });

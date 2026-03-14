@@ -114,10 +114,30 @@ label {
   align-items: center;
   justify-content: space-between;
   transition: background-color 0.1s;
+  cursor: grab;
+  background-color: var(--vscode-editor-background, transparent);
 }
 
 .profile-card:hover {
   background-color: var(--vscode-list-hoverBackground);
+}
+
+/* Card being dragged — floats above everything */
+.profile-card.drag-floating {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  opacity: 0.95;
+  cursor: grabbing;
+}
+
+/* Empty slot showing where card will land */
+.drag-placeholder {
+  border: 2px dashed var(--vscode-focusBorder, #007acc);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  background: var(--vscode-list-hoverBackground, rgba(0,122,204,0.06));
 }
 
 .profile-card-info h3 {
@@ -661,4 +681,163 @@ button > i.codicon {
 
 .toggle-switch input:checked + .toggle-slider::before {
   transform: translateX(16px);
+}
+
+/* Two toggle cards side-by-side */
+.toggle-card-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.toggle-card-row .toggle-card {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* Profile badge (pin / auto-launch indicator) */
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 5px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.badge-pin {
+  color: var(--vscode-textLink-foreground, #4da3ff);
+}
+.badge-auto {
+  color: var(--vscode-charts-green, #4caf50);
+}
+
+/* Pinned profile card — subtle left border accent */
+.profile-card-pinned {
+  border-left: 3px solid var(--vscode-focusBorder, #007acc);
+}
+
+/* Icon-only button (pin button on cards) */
+button.icon-only {
+  padding: 4px 6px;
+  min-width: unset;
+  line-height: 1;
+}
+
+/* Rotate unactive pin icon to vertical */
+button.icon-only:not(.active) .codicon-pin {
+  display: inline-block;
+  transform: rotate(-90deg);
+}
+
+button.icon-only.active {
+  color: var(--vscode-textLink-foreground, #4da3ff);
+  border-color: var(--vscode-textLink-foreground, #4da3ff);
+}
+
+/* field-hint code tag */
+.field-hint code {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 11px;
+  background: var(--vscode-textCodeBlock-background, rgba(128, 128, 128, 0.15));
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+/* Add group / Add from template row */
+.group-add-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+/* Template picker modal */
+.template-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.template-modal {
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border, #444);
+  border-radius: 6px;
+  width: 480px;
+  max-width: 95vw;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.template-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--vscode-panel-border, #444);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.template-modal-list {
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: var(--vscode-foreground);
+  width: 100%;
+}
+
+.template-item:hover {
+  background: var(--vscode-list-hoverBackground);
+  border-color: var(--vscode-focusBorder, #007acc);
+}
+
+.template-item-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  color: var(--vscode-textLink-foreground, #4da3ff);
+}
+
+.template-item-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.template-item-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.template-item-desc {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 1px;
+}
+
+.template-item-meta {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  flex-shrink: 0;
+  white-space: nowrap;
 }

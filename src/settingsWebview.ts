@@ -77,6 +77,10 @@ export class SettingsWebview {
             });
             break;
 
+          case 'reorderProfiles':
+            await this.profileManager.reorderProfiles(message.ids);
+            break;
+
           case 'launchProfile': {
             const profile = this.profileManager.getProfile(message.profileId);
             if (profile) {
@@ -123,7 +127,7 @@ export class SettingsWebview {
 
     const styleUri = webview.asWebviewUri(
       vscode.Uri.file(
-        path.join(this.context.extensionPath, 'webview', 'settings.css')
+        path.join(this.context.extensionPath, 'webview', 'settings-v4.css')
       )
     );
     const scriptUri = webview.asWebviewUri(

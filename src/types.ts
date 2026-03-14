@@ -19,6 +19,8 @@ export interface Profile {
   name: string;
   groups: TerminalGroup[];
   closeOnRelaunch?: boolean; // close previously launched terminals from this profile before relaunching
+  pinned?: boolean;          // pinned profiles appear at the top of the list and Quick Launch
+  autoLaunch?: boolean;      // auto-launch this profile when the workspace opens
 }
 
 /** Messages sent between extension and webview */
@@ -29,6 +31,7 @@ export type WebviewMessage =
   | { command: 'launchProfile'; profileId: string }
   | { command: 'exportProfiles' }
   | { command: 'importProfiles' }
+  | { command: 'reorderProfiles'; ids: string[] }
   | { command: 'profilesLoaded'; profiles: Profile[] }
   | { command: 'profileSaved'; profile: Profile }
   | { command: 'error'; message: string };

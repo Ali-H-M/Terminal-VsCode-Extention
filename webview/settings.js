@@ -126,6 +126,172 @@
     'worktree-small', 'wrench', 'wrench-subaction', 'x', 'zap', 'zoom-in', 'zoom-out'
   ];
 
+  // Pre-configured terminal group templates
+  const TEMPLATES = [
+    {
+      id: 'react',
+      label: 'React',
+      icon: 'sync',
+      description: 'Dev server + test watcher side by side',
+      groups: [
+        {
+          splitCount: 2, terminals: [
+            { name: 'Dev Server', commands: ['npm start'], icon: 'play', color: '' },
+            { name: 'Tests', commands: ['npm test'], icon: 'beaker', color: '' },
+          ]
+        },
+      ],
+    },
+    {
+      id: 'nextjs',
+      label: 'Next.js',
+      icon: 'globe',
+      description: 'Dev server + TypeScript watch checker',
+      groups: [
+        {
+          splitCount: 2, terminals: [
+            { name: 'Dev Server', commands: ['npm run dev'], icon: 'play', color: '' },
+            { name: 'Type Check', commands: ['tsc --watch --noEmit'], icon: 'symbol-keyword', color: '' },
+          ]
+        },
+      ],
+    },
+    {
+      id: 'angular',
+      label: 'Angular',
+      icon: 'symbol-event',
+      description: 'ng serve + ng test watcher',
+      groups: [
+        {
+          splitCount: 2, terminals: [
+            { name: 'Serve', commands: ['ng serve'], icon: 'play', color: '' },
+            { name: 'Tests', commands: ['ng test --watch'], icon: 'beaker', color: '' },
+          ]
+        },
+      ],
+    },
+    {
+      id: 'vue',
+      label: 'Vue (Vite)',
+      icon: 'layers',
+      description: 'Vite dev server + shell',
+      groups: [
+        {
+          splitCount: 2, terminals: [
+            { name: 'Dev Server', commands: ['npm run dev'], icon: 'play', color: '' },
+            { name: 'Shell', commands: [''], icon: 'terminal', color: '' },
+          ]
+        },
+      ],
+    },
+    {
+      id: 'node-express',
+      label: 'Node / Express',
+      icon: 'server',
+      description: 'nodemon dev server + shell for quick commands',
+      groups: [
+        {
+          splitCount: 2, terminals: [
+            { name: 'Server', commands: ['node --watch src/index.js'], icon: 'server-process', color: '' },
+            { name: 'Shell', commands: [''], icon: 'terminal', color: '' },
+          ]
+        },
+      ],
+    },
+    {
+      id: 'fullstack',
+      label: 'Full-Stack (Frontend + Backend)',
+      icon: 'split-horizontal',
+      description: 'Separate groups for frontend and backend',
+      groups: [
+        {
+          splitCount: 2, terminals: [
+            { name: 'Frontend', commands: ['cd frontend', 'npm run dev'], icon: 'browser', color: '' },
+            { name: 'Backend', commands: ['cd backend', 'npm run dev'], icon: 'server-process', color: '' },
+          ]
+        },
+        {
+          splitCount: 1, terminals: [
+            { name: 'Shell', commands: [''], icon: 'terminal', color: '' },
+          ]
+        },
+      ],
+    },
+    {
+      id: 'python',
+      label: 'Python',
+      icon: 'python',
+      description: 'Activate venv + run app + REPL',
+      groups: [
+        {
+          splitCount: 2, terminals: [
+            { name: 'Run', commands: ['source venv/bin/activate', 'python main.py'], icon: 'run', color: '' },
+            { name: 'REPL', commands: ['source venv/bin/activate', 'python'], icon: 'terminal', color: '' },
+          ]
+        },
+      ],
+    },
+    {
+      id: 'django',
+      label: 'Django',
+      icon: 'database',
+      description: 'runserver + Django shell + terminal',
+      groups: [
+        {
+          splitCount: 3, terminals: [
+            { name: 'Dev Server', commands: ['source venv/bin/activate', 'python manage.py runserver'], icon: 'server-process', color: '' },
+            { name: 'Django Shell', commands: ['source venv/bin/activate', 'python manage.py shell'], icon: 'repl', color: '' },
+            { name: 'Terminal', commands: ['source venv/bin/activate'], icon: 'terminal', color: '' },
+          ]
+        },
+      ],
+    },
+    {
+      id: 'laravel',
+      label: 'Laravel',
+      icon: 'symbol-namespace',
+      description: 'artisan serve + queue worker + Tinker REPL',
+      groups: [
+        {
+          splitCount: 3, terminals: [
+            { name: 'Serve', commands: ['php artisan serve'], icon: 'server-process', color: '' },
+            { name: 'Queue', commands: ['php artisan queue:work'], icon: 'tasklist', color: '' },
+            { name: 'Tinker', commands: ['php artisan tinker'], icon: 'repl', color: '' },
+          ]
+        },
+      ],
+    },
+    {
+      id: 'docker',
+      label: 'Docker Compose',
+      icon: 'package',
+      description: 'Compose up + live logs + exec shell',
+      groups: [
+        {
+          splitCount: 3, terminals: [
+            { name: 'Up', commands: ['docker compose up'], icon: 'play-circle', color: '' },
+            { name: 'Logs', commands: ['docker compose logs -f'], icon: 'output', color: '' },
+            { name: 'Shell', commands: ['docker compose exec app sh'], icon: 'terminal', color: '' },
+          ]
+        },
+      ],
+    },
+    {
+      id: 'monorepo',
+      label: 'Monorepo (Turborepo / Nx)',
+      icon: 'repo',
+      description: 'Turbo dev pipeline + build watcher + shell',
+      groups: [
+        {
+          splitCount: 2, terminals: [
+            { name: 'Dev Pipeline', commands: ['npx turbo run dev --parallel'], icon: 'play', color: '' },
+            { name: 'Shell', commands: [''], icon: 'terminal', color: '' },
+          ]
+        },
+      ],
+    },
+  ];
+
   const COLOR_OPTIONS = [
     { value: '', label: 'Default', css: '' },
     { value: 'terminal.ansiRed', label: 'Red', css: '#cd3131' },
@@ -279,14 +445,20 @@
         </div>
       `;
     } else {
-      let cardsHtml = profiles.map(p => {
+      // Pinned profiles first, then rest in original order
+      const sorted = [...profiles].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+      let cardsHtml = sorted.map(p => {
         const terminalCount = p.groups.reduce((sum, g) => sum + g.terminals.length, 0);
         const groupCount = p.groups.length;
         const isDeleting = pendingDeleteId === p.id;
+        const badges = [
+          p.pinned ? `<span class="profile-badge badge-pin" title="Pinned"><i class="codicon codicon-pinned"></i></span>` : '',
+          p.autoLaunch ? `<span class="profile-badge badge-auto" title="Auto-launches on workspace open"><i class="codicon codicon-rocket"></i></span>` : '',
+        ].join('');
         return `
-          <div class="profile-card ${isDeleting ? 'profile-card-deleting' : ''}">
+          <div class="profile-card ${isDeleting ? 'profile-card-deleting' : ''} ${p.pinned ? 'profile-card-pinned' : ''}" data-id="${p.id}">
             <div class="profile-card-info">
-              <h3>${escapeHtml(p.name)}</h3>
+              <h3>${badges}${escapeHtml(p.name)}</h3>
               <p>${groupCount} group(s), ${terminalCount} terminal(s)</p>
             </div>
             ${isDeleting
@@ -296,6 +468,9 @@
                    <button class="secondary" id="btn-cancel-delete">Cancel</button>
                  </div>`
             : `<div class="profile-card-actions">
+                   <button class="icon-only secondary ${p.pinned ? 'active' : ''}" data-action="pin" data-id="${p.id}" title="${p.pinned ? 'Unpin profile' : 'Pin to top'}">
+                     <i class="codicon codicon-${p.pinned ? 'pinned' : 'pin'}"></i>
+                   </button>
                    <button data-action="launch" data-id="${p.id}">Launch</button>
                    <button class="secondary" data-action="edit" data-id="${p.id}">Edit</button>
                    <button class="secondary danger" data-action="delete" data-id="${p.id}">Delete</button>
@@ -334,6 +509,12 @@
         const id = e.currentTarget.getAttribute('data-id');
         if (action === 'launch') {
           vscode.postMessage({ command: 'launchProfile', profileId: id });
+        } else if (action === 'pin') {
+          const profile = profiles.find(p => p.id === id);
+          if (profile) {
+            profile.pinned = !profile.pinned;
+            vscode.postMessage({ command: 'saveProfile', profile });
+          }
         } else if (action === 'edit') {
           editingProfile = JSON.parse(JSON.stringify(profiles.find(p => p.id === id)));
           renderEditor();
@@ -361,6 +542,82 @@
     });
     document.getElementById('btn-import')?.addEventListener('click', () => {
       vscode.postMessage({ command: 'importProfiles' });
+    });
+
+    // Live drag-to-reorder via pointer events
+    const listEl = document.getElementById('profile-list');
+    let dragEl = null;
+    let placeholder = null;
+
+    listEl && listEl.querySelectorAll('.profile-card').forEach(card => {
+      card.addEventListener('mousedown', (e) => {
+        // Only drag from the card body, not from buttons
+        if (e.target.closest('button')) { return; }
+        e.preventDefault();
+
+        dragEl = card;
+        const rect = card.getBoundingClientRect();
+
+        // Create placeholder that holds the space
+        placeholder = document.createElement('div');
+        placeholder.className = 'drag-placeholder';
+        placeholder.style.height = rect.height + 'px';
+        card.parentNode.insertBefore(placeholder, card.nextSibling);
+
+        // Float the card
+        card.classList.add('drag-floating');
+        card.style.width = rect.width + 'px';
+        card.style.top = rect.top + 'px';
+        card.style.left = rect.left + 'px';
+        document.body.appendChild(card);
+
+        const startY = e.clientY;
+        const startTop = rect.top;
+
+        function onMouseMove(e) {
+          const dy = e.clientY - startY;
+          card.style.top = (startTop + dy) + 'px';
+
+          // Find which card the placeholder should go before
+          const cards = [...listEl.querySelectorAll('.profile-card:not(.drag-floating)')];
+          let inserted = false;
+          for (const c of cards) {
+            const r = c.getBoundingClientRect();
+            if (e.clientY < r.top + r.height / 2) {
+              listEl.insertBefore(placeholder, c);
+              inserted = true;
+              break;
+            }
+          }
+          if (!inserted) { listEl.appendChild(placeholder); }
+        }
+
+        function onMouseUp() {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+
+          // Put card back where placeholder is
+          card.classList.remove('drag-floating');
+          card.style.width = '';
+          card.style.top = '';
+          card.style.left = '';
+          listEl.insertBefore(card, placeholder);
+          placeholder.remove();
+          placeholder = null;
+          dragEl = null;
+
+          // Derive new order from DOM
+          const newIds = [...listEl.querySelectorAll('.profile-card[data-id]')].map(c => c.getAttribute('data-id'));
+          const reordered = newIds.map(id => profiles.find(p => p.id === id)).filter(Boolean);
+          if (reordered.length === profiles.length) {
+            profiles.splice(0, profiles.length, ...reordered);
+            vscode.postMessage({ command: 'reorderProfiles', ids: newIds });
+          }
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
     });
   }
 
@@ -399,7 +656,7 @@
                 <label>Icon</label>
                 <button type="button" class="icon-picker-trigger" data-gi="${gi}" data-ti="${ti}">
                   ${term.icon
-            ? `<i class="codicon codicon-${escapeHtml(term.icon)}"></i> <span>${escapeHtml(term.icon)}</span>`
+            ? `<i class="codicon codicon-${escapeHtml(term.icon)}" style="color:${(() => { const c = COLOR_OPTIONS.find(o => o.value === term.color); return c?.css || 'var(--vscode-foreground)'; })()}"></i> <span>${escapeHtml(term.icon)}</span>`
             : '<span>Select icon...</span>'}
                 </button>
               </div>
@@ -431,7 +688,7 @@
                      value="${escapeHtml(term.cwd || '')}" placeholder="e.g. ./frontend or /home/user/project" />
             </div>
             <div class="form-group" style="margin-top: 8px;">
-              <label>Commands (one per line, run in order)</label>
+              <label>Commands <span class="field-hint">(one per line, run in order)</span></label>
               <textarea data-field="terminal-commands" data-gi="${gi}" data-ti="${ti}"
                         placeholder="npm run dev">${escapeHtml(term.commands.join('\n'))}</textarea>
             </div>
@@ -494,19 +751,34 @@
           <input type="text" id="profile-name" value="${escapeHtml(p.name)}" placeholder="e.g. My Dev Setup" />
           <span id="profile-name-error" class="field-error" style="display:none;">Profile name is required</span>
         </div>
-        <div class="toggle-card ${p.closeOnRelaunch ? 'toggle-card-on' : ''}">
-          <div class="toggle-card-text">
-            <span class="toggle-card-title"><i class="codicon codicon-close-all"></i> Close on Relaunch</span>
-            <span class="toggle-card-desc">Automatically close this profile's terminals before relaunching</span>
+        <div class="toggle-card-row">
+          <div class="toggle-card ${p.closeOnRelaunch ? 'toggle-card-on' : ''}">
+            <div class="toggle-card-text">
+              <span class="toggle-card-title"><i class="codicon codicon-close-all"></i> Close on Relaunch</span>
+              <span class="toggle-card-desc">Close this profile terminals before relaunching the profile</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="close-on-relaunch" ${p.closeOnRelaunch ? 'checked' : ''} />
+              <span class="toggle-slider"></span>
+            </label>
           </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="close-on-relaunch" ${p.closeOnRelaunch ? 'checked' : ''} />
-            <span class="toggle-slider"></span>
-          </label>
+          <div class="toggle-card ${p.autoLaunch ? 'toggle-card-on' : ''}">
+            <div class="toggle-card-text">
+              <span class="toggle-card-title"><i class="codicon codicon-rocket"></i> Auto-Launch</span>
+              <span class="toggle-card-desc">Launch this profile automatically when this workspace opens</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="auto-launch" ${p.autoLaunch ? 'checked' : ''} />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
         </div>
         <h2>Terminal Groups</h2>
         ${groupsHtml}
-        <button class="secondary" id="btn-add-group">+ Add Terminal Group</button>
+        <div class="group-add-row">
+          <button class="secondary" id="btn-add-group"><i class="codicon codicon-add"></i> Add Terminal Group</button>
+          <button class="secondary" id="btn-add-template"><i class="codicon codicon-library"></i> Add from Template</button>
+        </div>
         <div class="action-bar">
           <button id="btn-save">Save Profile</button>
           <button class="secondary" id="btn-cancel">Cancel</button>
@@ -515,6 +787,49 @@
     `;
 
     bindEditorEvents();
+  }
+
+  function showTemplateModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'template-modal-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'template-modal';
+    modal.innerHTML = `
+      <div class="template-modal-header">
+        <span>Add from Template</span>
+        <button class="icon-only secondary" id="btn-close-template-modal" title="Close"><i class="codicon codicon-close"></i></button>
+      </div>
+      <div class="template-modal-list">
+        ${TEMPLATES.map(t => `
+          <button class="template-item" data-template-id="${t.id}">
+            <i class="codicon codicon-${t.icon} template-item-icon"></i>
+            <div class="template-item-text">
+              <span class="template-item-label">${t.label}</span>
+              <span class="template-item-desc">${t.description}</span>
+            </div>
+            <span class="template-item-meta">${t.groups.length} group(s), ${t.groups.reduce((s, g) => s + g.terminals.length, 0)} terminal(s)</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    document.getElementById('btn-close-template-modal').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+    modal.querySelectorAll('.template-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tmpl = TEMPLATES.find(t => t.id === btn.getAttribute('data-template-id'));
+        if (!tmpl) return;
+        const cloned = JSON.parse(JSON.stringify(tmpl.groups));
+        editingProfile.groups.push(...cloned);
+        overlay.remove();
+        renderEditor();
+      });
+    });
   }
 
   function bindEditorEvents() {
@@ -568,6 +883,12 @@
           dropdown.querySelectorAll('.color-picker-option').forEach(o => o.classList.remove('selected'));
           opt.classList.add('selected');
           dropdown.classList.remove('open');
+          // Update the icon preview color in the matching icon-picker-trigger
+          const iconTrigger = document.querySelector(`.icon-picker-trigger[data-gi="${gi}"][data-ti="${ti}"]`);
+          if (iconTrigger) {
+            const iconEl = iconTrigger.querySelector('i.codicon');
+            if (iconEl) iconEl.style.color = colorObj?.css || 'var(--vscode-foreground)';
+          }
         });
       });
     });
@@ -588,7 +909,8 @@
           term.icon = selectedValue;
           // Update button display
           if (selectedValue) {
-            btn.innerHTML = `<i class="codicon codicon-${escapeHtml(selectedValue)}"></i> <span>${escapeHtml(selectedValue)}</span>`;
+            const iconColor = COLOR_OPTIONS.find(o => o.value === term.color)?.css || 'var(--vscode-foreground)';
+            btn.innerHTML = `<i class="codicon codicon-${escapeHtml(selectedValue)}" style="color:${iconColor}"></i> <span>${escapeHtml(selectedValue)}</span>`;
           } else {
             btn.innerHTML = '<span>Select icon...</span>';
           }
@@ -632,6 +954,10 @@
       renderEditor();
     });
 
+    document.getElementById('btn-add-template')?.addEventListener('click', () => {
+      showTemplateModal();
+    });
+
     // Remove group buttons
     document.querySelectorAll('[data-remove-group]').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -644,6 +970,13 @@
     // Close-on-relaunch toggle
     document.getElementById('close-on-relaunch')?.addEventListener('change', (e) => {
       editingProfile.closeOnRelaunch = e.target.checked;
+      const card = e.target.closest('.toggle-card');
+      if (card) card.classList.toggle('toggle-card-on', e.target.checked);
+    });
+
+    // Auto-launch toggle
+    document.getElementById('auto-launch')?.addEventListener('change', (e) => {
+      editingProfile.autoLaunch = e.target.checked;
       const card = e.target.closest('.toggle-card');
       if (card) card.classList.toggle('toggle-card-on', e.target.checked);
     });

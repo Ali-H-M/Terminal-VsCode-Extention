@@ -29,4 +29,10 @@ export class ProfileManager {
     const profiles = this.getAllProfiles().filter(p => p.id !== id);
     await this.globalState.update(STORAGE_KEY, profiles);
   }
+
+  async reorderProfiles(ids: string[]): Promise<void> {
+    const profiles = this.getAllProfiles();
+    const reordered = ids.map(id => profiles.find(p => p.id === id)).filter((p): p is Profile => !!p);
+    await this.globalState.update(STORAGE_KEY, reordered);
+  }
 }
