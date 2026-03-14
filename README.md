@@ -36,48 +36,6 @@ Open the Command Palette (`Ctrl+Shift+P`) and use:
 
 Run **Terminal Launcher: Quick Launch**, select a profile, and all configured terminals will open with their commands running automatically.
 
-## Building from Source
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (v18+)
-- [VS Code](https://code.visualstudio.com/) (v1.85+)
-
-### Setup
-
-```bash
-git clone https://github.com/Ali-H-M/Terminal-VsCode-Extention.git
-cd terminal-launcher
-npm install
-npm run compile
-```
-
-### Development
-
-1. Open the project folder in VS Code
-2. Press `F5` to launch the Extension Development Host
-3. Test the extension in the new VS Code window that opens
-
-Use `npm run watch` for automatic recompilation on file changes.
-
-### Project Structure
-
-```
-src/
-├── extension.ts          # Entry point, command registration
-├── terminalManager.ts    # Terminal creation, splitting, command execution
-├── profileManager.ts     # Profile CRUD (stored in VS Code globalState)
-├── settingsWebview.ts    # Webview panel for the settings UI
-├── types.ts              # TypeScript interfaces
-└── webview/
-    ├── settings.css      # Theme-aware styles
-    └── settings.js       # Settings UI logic
-```
-
-## License
-
-MIT
-
 ## Create Profile
 ![Terminal Bulder](Profile-Config.png)
 

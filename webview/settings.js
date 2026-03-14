@@ -6,59 +6,236 @@
   let editingProfile = null; // null = list view, object = editing
   let pendingDeleteId = null; // track delete confirmation
 
-  // Icons available for terminals (with emoji previews)
-  const ICON_OPTIONS = [
-    { value: '', label: 'Default', emoji: '' },
-    // Developer essentials
-    { value: 'terminal', label: 'Terminal', emoji: '\uD83D\uDCBB' },
-    { value: 'code', label: 'Code', emoji: '\uD83D\uDCDD' },
-    { value: 'file-code', label: 'File Code', emoji: '\uD83D\uDCC4' },
-    { value: 'symbol-namespace', label: 'Namespace', emoji: '\uD83D\uDCE6' },
-    { value: 'package', label: 'Package', emoji: '\uD83D\uDCE6' },
-    // Infrastructure
-    { value: 'server', label: 'Server', emoji: '\uD83D\uDDA5\uFE0F' },
-    { value: 'database', label: 'Database', emoji: '\uD83D\uDDC4\uFE0F' },
-    { value: 'cloud', label: 'Cloud', emoji: '\u2601\uFE0F' },
-    { value: 'globe', label: 'Globe', emoji: '\uD83C\uDF10' },
-    { value: 'vm', label: 'Container', emoji: '\uD83D\uDCE5' },
-    // Testing & debugging
-    { value: 'bug', label: 'Bug', emoji: '\uD83D\uDC1B' },
-    { value: 'beaker', label: 'Test', emoji: '\uD83E\uDDEA' },
-    { value: 'debug-console', label: 'Debug', emoji: '\uD83D\uDD0D' },
-    { value: 'debug-alt', label: 'Debug Alt', emoji: '\uD83D\uDEE0\uFE0F' },
-    { value: 'checklist', label: 'Checklist', emoji: '\u2705' },
-    // Actions
-    { value: 'play', label: 'Run', emoji: '\u25B6\uFE0F' },
-    { value: 'rocket', label: 'Deploy', emoji: '\uD83D\uDE80' },
-    { value: 'flame', label: 'Flame', emoji: '\uD83D\uDD25' },
-    { value: 'zap', label: 'Zap', emoji: '\u26A1' },
-    { value: 'sync', label: 'Sync', emoji: '\uD83D\uDD04' },
-    // Tools
-    { value: 'gear', label: 'Gear', emoji: '\u2699\uFE0F' },
-    { value: 'tools', label: 'Tools', emoji: '\uD83D\uDD27' },
-    { value: 'wrench', label: 'Wrench', emoji: '\uD83D\uDD29' },
-    { value: 'key', label: 'Key', emoji: '\uD83D\uDD11' },
-    { value: 'lock', label: 'Lock', emoji: '\uD83D\uDD12' },
-    { value: 'shield', label: 'Shield', emoji: '\uD83D\uDEE1\uFE0F' },
-    // Misc
-    { value: 'star', label: 'Star', emoji: '\u2B50' },
-    { value: 'heart', label: 'Heart', emoji: '\u2764\uFE0F' },
-    { value: 'eye', label: 'Watch', emoji: '\uD83D\uDC41\uFE0F' },
-    { value: 'bookmark', label: 'Bookmark', emoji: '\uD83D\uDD16' },
-    { value: 'tag', label: 'Tag', emoji: '\uD83C\uDFF7\uFE0F' },
-    { value: 'coffee', label: 'Coffee', emoji: '\u2615' },
+  // All codicon icon IDs (same as VSCode's "Change Icon" picker)
+  const ALL_ICONS = [
+    'account', 'activate-breakpoints', 'add', 'add-small', 'agent', 'alert', 'archive', 'array',
+    'arrow-both', 'arrow-circle-down', 'arrow-circle-left', 'arrow-circle-right', 'arrow-circle-up',
+    'arrow-down', 'arrow-left', 'arrow-right', 'arrow-small-down', 'arrow-small-left',
+    'arrow-small-right', 'arrow-small-up', 'arrow-swap', 'arrow-up', 'ask', 'attach',
+    'azure', 'azure-devops', 'beaker', 'beaker-stop', 'bell', 'bell-dot', 'bell-slash',
+    'bell-slash-dot', 'blank', 'bold', 'book', 'bookmark', 'bracket', 'bracket-dot',
+    'bracket-error', 'briefcase', 'broadcast', 'browser', 'bug', 'build', 'calendar',
+    'call-incoming', 'call-outgoing', 'case-sensitive', 'check', 'check-all',
+    'checklist', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chip',
+    'chrome-close', 'chrome-maximize', 'chrome-minimize', 'chrome-restore',
+    'circle', 'circle-filled', 'circle-large', 'circle-large-filled', 'circle-large-outline',
+    'circle-outline', 'circle-slash', 'circle-small', 'circle-small-filled', 'circuit-board',
+    'clear-all', 'clippy', 'clock', 'clockface', 'clone', 'close', 'close-all', 'close-dirty',
+    'cloud', 'cloud-download', 'cloud-small', 'cloud-upload', 'code', 'code-oss', 'code-review',
+    'coffee', 'collapse-all', 'collection', 'collection-small', 'color-mode', 'combine',
+    'comment', 'comment-add', 'comment-discussion', 'comment-discussion-quote',
+    'comment-draft', 'comment-unresolved', 'compare-changes', 'compass', 'compass-active',
+    'compass-dot', 'console', 'copy', 'coverage', 'credit-card', 'cursor',
+    'dash', 'dashboard', 'database', 'debug', 'debug-all', 'debug-alt', 'debug-alt-small',
+    'debug-breakpoint', 'debug-breakpoint-conditional', 'debug-breakpoint-conditional-disabled',
+    'debug-breakpoint-conditional-unverified', 'debug-breakpoint-data',
+    'debug-breakpoint-data-disabled', 'debug-breakpoint-data-unverified',
+    'debug-breakpoint-disabled', 'debug-breakpoint-function',
+    'debug-breakpoint-function-disabled', 'debug-breakpoint-function-unverified',
+    'debug-breakpoint-log', 'debug-breakpoint-log-disabled', 'debug-breakpoint-log-unverified',
+    'debug-breakpoint-unsupported', 'debug-breakpoint-unverified', 'debug-connected',
+    'debug-console', 'debug-continue', 'debug-continue-small', 'debug-coverage',
+    'debug-disconnect', 'debug-hint', 'debug-line-by-line', 'debug-pause', 'debug-rerun',
+    'debug-restart', 'debug-restart-frame', 'debug-reverse-continue', 'debug-stackframe',
+    'debug-stackframe-active', 'debug-stackframe-dot', 'debug-stackframe-focused',
+    'debug-start', 'debug-step-back', 'debug-step-into', 'debug-step-out', 'debug-step-over',
+    'debug-stop', 'desktop-download', 'device-camera', 'device-camera-video', 'device-desktop',
+    'device-mobile', 'diff', 'diff-added', 'diff-ignored', 'diff-modified', 'diff-multiple',
+    'diff-removed', 'diff-renamed', 'diff-sidebyside', 'diff-single', 'discard', 'download',
+    'edit', 'edit-code', 'edit-session', 'edit-sparkle', 'editor-layout', 'ellipsis',
+    'empty-window', 'eraser', 'error', 'error-small', 'exclude', 'expand-all', 'export',
+    'extensions', 'extensions-large', 'eye', 'eye-closed', 'eye-unwatch', 'eye-watch',
+    'feedback', 'file', 'file-add', 'file-binary', 'file-code', 'file-directory',
+    'file-directory-create', 'file-media', 'file-pdf', 'file-submodule',
+    'file-symlink-directory', 'file-symlink-file', 'file-text', 'file-zip', 'files',
+    'filter', 'filter-filled', 'flag', 'flame', 'fold', 'fold-down', 'fold-horizontal',
+    'fold-horizontal-filled', 'fold-up', 'fold-vertical', 'fold-vertical-filled',
+    'folder', 'folder-active', 'folder-library', 'folder-opened', 'forward', 'game', 'gather',
+    'gear', 'gift', 'gist', 'gist-fork', 'gist-new', 'gist-private', 'gist-secret',
+    'git-branch', 'git-branch-changes', 'git-branch-conflicts', 'git-branch-create',
+    'git-branch-delete', 'git-branch-staged-changes', 'git-commit', 'git-compare',
+    'git-fetch', 'git-fork-private', 'git-merge', 'git-pull-request',
+    'git-pull-request-abandoned', 'git-pull-request-assignee', 'git-pull-request-closed',
+    'git-pull-request-create', 'git-pull-request-done', 'git-pull-request-draft',
+    'git-pull-request-go-to-changes', 'git-pull-request-label', 'git-pull-request-milestone',
+    'git-pull-request-new-changes', 'git-pull-request-reviewer',
+    'git-stash', 'git-stash-apply', 'git-stash-pop', 'github', 'github-action', 'github-alt',
+    'github-inverted', 'github-project', 'globe', 'go-to-editing-session', 'go-to-file',
+    'go-to-search', 'grabber', 'graph', 'graph-left', 'graph-line', 'graph-scatter', 'gripper',
+    'group-by-ref-type', 'heart', 'heart-filled', 'history', 'home', 'horizontal-rule',
+    'hubot', 'inbox', 'indent', 'index-zero', 'info', 'insert', 'inspect', 'issue-closed',
+    'issue-draft', 'issue-opened', 'issue-reopened', 'issues', 'italic', 'jersey', 'json',
+    'kebab-horizontal', 'kebab-vertical', 'key', 'keyboard', 'keyboard-tab',
+    'keyboard-tab-above', 'keyboard-tab-below', 'law', 'layers', 'layers-active', 'layers-dot',
+    'layout', 'layout-activitybar-left', 'layout-activitybar-right', 'layout-centered',
+    'layout-menubar', 'layout-panel', 'layout-panel-center', 'layout-panel-dock',
+    'layout-panel-justify', 'layout-panel-left', 'layout-panel-off', 'layout-panel-right',
+    'layout-sidebar-left', 'layout-sidebar-left-dock', 'layout-sidebar-left-off',
+    'layout-sidebar-right', 'layout-sidebar-right-dock', 'layout-sidebar-right-off',
+    'layout-statusbar', 'library', 'light-bulb', 'lightbulb', 'lightbulb-autofix',
+    'lightbulb-empty', 'lightbulb-sparkle', 'link', 'link-external', 'list-filter', 'list-flat',
+    'list-ordered', 'list-selection', 'list-tree', 'list-unordered', 'live-share', 'loading',
+    'location', 'lock', 'lock-small', 'log-in', 'log-out', 'logo-github', 'magnet', 'mail',
+    'mail-read', 'mail-reply', 'map', 'map-filled', 'map-horizontal', 'map-horizontal-filled',
+    'map-vertical', 'map-vertical-filled', 'mark-github', 'markdown', 'mcp', 'megaphone',
+    'mention', 'menu', 'merge', 'merge-into', 'mic', 'mic-filled', 'microscope', 'milestone',
+    'mirror', 'mirror-private', 'mirror-public', 'mortar-board', 'move', 'multiple-windows',
+    'music', 'mute', 'new-collection', 'new-file', 'new-folder', 'new-session', 'newline',
+    'no-newline', 'note', 'notebook', 'notebook-template', 'octoface', 'open-in-product',
+    'open-in-window', 'open-preview', 'organization', 'organization-filled',
+    'organization-outline', 'output', 'package', 'paintcan', 'pass', 'pass-filled', 'pencil',
+    'percentage', 'person', 'person-add', 'person-filled', 'person-follow', 'person-outline',
+    'piano', 'pie-chart', 'pin', 'pinned', 'pinned-dirty', 'play', 'play-circle', 'plug', 'plus',
+    'preserve-case', 'preview', 'primitive-dot', 'primitive-square', 'project', 'pulse',
+    'python', 'question', 'quote', 'quotes', 'radio-tower', 'reactions', 'record', 'record-keys',
+    'record-small', 'redo', 'references', 'refresh', 'regex', 'remote', 'remote-explorer',
+    'remove', 'remove-close', 'remove-small', 'rename', 'repl', 'replace', 'replace-all', 'reply',
+    'repo', 'repo-clone', 'repo-create', 'repo-delete', 'repo-fetch', 'repo-force-push',
+    'repo-forked', 'repo-pinned', 'repo-pull', 'repo-push', 'repo-selected', 'repo-sync',
+    'report', 'request-changes', 'robot', 'rocket', 'root-folder', 'root-folder-opened', 'rss',
+    'ruby', 'run', 'run-above', 'run-all', 'run-all-coverage', 'run-below', 'run-coverage',
+    'run-errors', 'run-with-deps', 'save', 'save-all', 'save-as', 'screen-cut', 'screen-full',
+    'screen-normal', 'search', 'search-fuzzy', 'search-large', 'search-save', 'search-sparkle',
+    'search-stop', 'selection', 'send', 'send-to-remote-agent', 'server', 'server-environment',
+    'server-process', 'session-in-progress', 'settings', 'settings-gear', 'share', 'shield',
+    'sign-in', 'sign-out', 'skip', 'smiley', 'snake', 'sort-percentage', 'sort-precedence',
+    'source-control', 'sparkle', 'sparkle-filled', 'split-horizontal', 'split-vertical',
+    'squirrel', 'star', 'star-add', 'star-delete', 'star-empty', 'star-full', 'star-half',
+    'stop', 'stop-circle', 'strikethrough', 'surround-with',
+    'symbol-array', 'symbol-boolean', 'symbol-class', 'symbol-color', 'symbol-constant',
+    'symbol-constructor', 'symbol-enum', 'symbol-enum-member', 'symbol-event', 'symbol-field',
+    'symbol-file', 'symbol-folder', 'symbol-function', 'symbol-interface', 'symbol-key',
+    'symbol-keyword', 'symbol-method', 'symbol-method-arrow', 'symbol-misc', 'symbol-module',
+    'symbol-namespace', 'symbol-null', 'symbol-number', 'symbol-numeric', 'symbol-object',
+    'symbol-operator', 'symbol-package', 'symbol-parameter', 'symbol-property',
+    'symbol-reference', 'symbol-ruler', 'symbol-snippet', 'symbol-string', 'symbol-struct',
+    'symbol-structure', 'symbol-text', 'symbol-type-parameter', 'symbol-unit', 'symbol-value',
+    'symbol-variable', 'sync', 'sync-ignored', 'table', 'tag', 'tag-add', 'tag-remove', 'target',
+    'tasklist', 'telescope', 'terminal', 'terminal-bash', 'terminal-cmd', 'terminal-debian',
+    'terminal-decoration-error', 'terminal-decoration-incomplete', 'terminal-decoration-mark',
+    'terminal-decoration-success', 'terminal-git-bash', 'terminal-linux',
+    'terminal-powershell', 'terminal-tmux', 'terminal-ubuntu', 'text-size', 'thinking',
+    'three-bars', 'thumbsdown', 'thumbsdown-filled', 'thumbsup', 'thumbsup-filled', 'tools',
+    'trash', 'trashcan', 'triangle-down', 'triangle-left', 'triangle-right', 'triangle-up',
+    'twitter', 'type-hierarchy', 'type-hierarchy-sub', 'type-hierarchy-super', 'unarchive',
+    'unfold', 'ungroup-by-ref-type', 'unlock', 'unmute', 'unverified', 'variable',
+    'variable-group', 'verified', 'verified-filled', 'versions', 'vm', 'vm-active', 'vm-connect',
+    'vm-outline', 'vm-pending', 'vm-running', 'vm-small', 'vr', 'vscode', 'vscode-insiders',
+    'wand', 'warning', 'watch', 'whitespace', 'whole-word', 'window', 'window-active', 'word-wrap',
+    'workspace-trusted', 'workspace-unknown', 'workspace-untrusted', 'worktree',
+    'worktree-small', 'wrench', 'wrench-subaction', 'x', 'zap', 'zoom-in', 'zoom-out'
   ];
 
   const COLOR_OPTIONS = [
-    { value: '', label: 'Default' },
-    { value: 'terminal.ansiRed', label: 'Red' },
-    { value: 'terminal.ansiGreen', label: 'Green' },
-    { value: 'terminal.ansiYellow', label: 'Yellow' },
-    { value: 'terminal.ansiBlue', label: 'Blue' },
-    { value: 'terminal.ansiMagenta', label: 'Magenta' },
-    { value: 'terminal.ansiCyan', label: 'Cyan' },
-    { value: 'terminal.ansiWhite', label: 'White' },
+    { value: '', label: 'Default', css: '' },
+    { value: 'terminal.ansiRed', label: 'Red', css: '#cd3131' },
+    { value: 'terminal.ansiGreen', label: 'Green', css: '#0dbc79' },
+    { value: 'terminal.ansiYellow', label: 'Yellow', css: '#e5e510' },
+    { value: 'terminal.ansiBlue', label: 'Blue', css: '#2472c8' },
+    { value: 'terminal.ansiMagenta', label: 'Magenta', css: '#bc3fbc' },
+    { value: 'terminal.ansiCyan', label: 'Cyan', css: '#11a8cd' },
+    { value: 'terminal.ansiWhite', label: 'White', css: '#e5e5e5' },
   ];
+
+  // --- Icon Picker Modal (VSCode-style) ---
+  let activeIconPickerCallback = null;
+
+  function openIconPicker(currentValue, onSelect) {
+    // Prevent multiple modals
+    closeIconPicker();
+    activeIconPickerCallback = onSelect;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'icon-modal-overlay';
+    overlay.id = 'icon-modal-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'icon-modal';
+
+    // Search input
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.className = 'icon-modal-search';
+    searchInput.placeholder = 'Search icons';
+    searchInput.spellcheck = false;
+
+    // Icon grid
+    const grid = document.createElement('div');
+    grid.className = 'icon-modal-grid';
+
+    function renderIcons(filter) {
+      const query = (filter || '').toLowerCase();
+      grid.innerHTML = '';
+
+      // "None/Default" option
+      const noneBtn = document.createElement('button');
+      noneBtn.type = 'button';
+      noneBtn.className = 'icon-modal-item' + (!currentValue ? ' selected' : '');
+      noneBtn.title = 'None (default)';
+      noneBtn.innerHTML = '<i class="codicon codicon-close"></i>';
+      noneBtn.dataset.value = '';
+      grid.appendChild(noneBtn);
+
+      const filtered = (query
+        ? ALL_ICONS.filter(name => name.includes(query))
+        : ALL_ICONS).slice().sort();
+
+      filtered.forEach(name => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'icon-modal-item' + (currentValue === name ? ' selected' : '');
+        btn.title = name;
+        btn.innerHTML = `<i class="codicon codicon-${name}"></i>`;
+        btn.dataset.value = name;
+        grid.appendChild(btn);
+      });
+    }
+
+    renderIcons('');
+
+    // Search handler
+    searchInput.addEventListener('input', () => {
+      renderIcons(searchInput.value);
+    });
+
+    // Click on icon
+    grid.addEventListener('click', (e) => {
+      const item = e.target.closest('.icon-modal-item');
+      if (!item) return;
+      const value = item.dataset.value;
+      if (activeIconPickerCallback) {
+        activeIconPickerCallback(value);
+      }
+      closeIconPicker();
+    });
+
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeIconPicker();
+    });
+
+    // Close on Escape
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        closeIconPicker();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    modal.appendChild(searchInput);
+    modal.appendChild(grid);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    searchInput.focus();
+  }
+
+  function closeIconPicker() {
+    const overlay = document.getElementById('icon-modal-overlay');
+    if (overlay) overlay.remove();
+    activeIconPickerCallback = null;
+  }
 
   // Request profiles on load
   window.addEventListener('DOMContentLoaded', () => {
@@ -107,17 +284,17 @@
               <p>${groupCount} group(s), ${terminalCount} terminal(s)</p>
             </div>
             ${isDeleting
-              ? `<div class="profile-card-actions">
+            ? `<div class="profile-card-actions">
                    <span class="delete-confirm-text">Delete this profile?</span>
                    <button class="danger" id="btn-confirm-delete">Yes, Delete</button>
                    <button class="secondary" id="btn-cancel-delete">Cancel</button>
                  </div>`
-              : `<div class="profile-card-actions">
+            : `<div class="profile-card-actions">
                    <button data-action="launch" data-id="${p.id}">Launch</button>
                    <button class="secondary" data-action="edit" data-id="${p.id}">Edit</button>
                    <button class="secondary danger" data-action="delete" data-id="${p.id}">Delete</button>
                  </div>`
-            }
+          }
           </div>
         `;
       }).join('');
@@ -197,19 +374,32 @@
               </div>
               <div class="form-group">
                 <label>Icon</label>
-                <select data-field="terminal-icon" data-gi="${gi}" data-ti="${ti}">
-                  ${ICON_OPTIONS.map(o =>
-                    `<option value="${o.value}" ${term.icon === o.value ? 'selected' : ''}>${o.emoji ? o.emoji + ' ' : ''}${o.label}</option>`
-                  ).join('')}
-                </select>
+                <button type="button" class="icon-picker-trigger" data-gi="${gi}" data-ti="${ti}">
+                  ${term.icon
+            ? `<i class="codicon codicon-${escapeHtml(term.icon)}"></i> <span>${escapeHtml(term.icon)}</span>`
+            : '<span>Select icon...</span>'}
+                </button>
               </div>
               <div class="form-group">
                 <label>Color</label>
-                <select data-field="terminal-color" data-gi="${gi}" data-ti="${ti}">
-                  ${COLOR_OPTIONS.map(o =>
-                    `<option value="${o.value}" ${term.color === o.value ? 'selected' : ''}>${o.label}</option>`
-                  ).join('')}
-                </select>
+                <div class="color-picker" data-field="terminal-color" data-gi="${gi}" data-ti="${ti}">
+                  <button type="button" class="color-picker-trigger">
+                    ${(() => {
+            const colorObj = COLOR_OPTIONS.find(o => o.value === term.color);
+            const dotHtml = colorObj && colorObj.css
+              ? `<span class="color-dot" style="background:${colorObj.css}"></span>`
+              : '';
+            return `${dotHtml} ${escapeHtml(colorObj?.label || 'Default')}`;
+          })()}
+                  </button>
+                  <div class="color-picker-dropdown">
+                    ${COLOR_OPTIONS.map(o =>
+            `<div class="color-picker-option ${term.color === o.value ? 'selected' : ''}" data-value="${o.value}">
+                        ${o.css ? `<span class="color-dot" style="background:${o.css}"></span>` : ''} ${o.label}
+                      </div>`
+          ).join('')}
+                  </div>
+                </div>
               </div>
             </div>
             <div class="form-group" style="margin-top: 8px;">
@@ -256,8 +446,8 @@
           <div class="group-header">
             <h3>Group ${gi + 1}</h3>
             ${p.groups.length > 1
-              ? `<button class="small secondary" data-remove-group="${gi}">Remove Group</button>`
-              : ''}
+          ? `<button class="small secondary" data-remove-group="${gi}">Remove Group</button>`
+          : ''}
           </div>
           <div class="form-group split-select-row">
             <label>Terminal Layout</label>
@@ -291,24 +481,78 @@
 
   function bindEditorEvents() {
 
-    // Terminal fields
+    // Terminal fields (name, commands)
     document.querySelectorAll('[data-field^="terminal-"]').forEach(el => {
+      const field = el.getAttribute('data-field');
+      if (field === 'terminal-color') return; // handled by color picker
       const gi = parseInt(el.getAttribute('data-gi'));
       const ti = parseInt(el.getAttribute('data-ti'));
-      const field = el.getAttribute('data-field');
       const event = el.tagName === 'SELECT' ? 'change' : 'input';
 
       el.addEventListener(event, (e) => {
         const term = editingProfile.groups[gi].terminals[ti];
         if (field === 'terminal-name') {
           term.name = e.target.value;
-        } else if (field === 'terminal-icon') {
-          term.icon = e.target.value;
-        } else if (field === 'terminal-color') {
-          term.color = e.target.value;
         } else if (field === 'terminal-commands') {
           term.commands = e.target.value.split('\n');
         }
+      });
+    });
+
+    // Color picker dropdowns
+    document.querySelectorAll('.color-picker').forEach(picker => {
+      const gi = parseInt(picker.getAttribute('data-gi'));
+      const ti = parseInt(picker.getAttribute('data-ti'));
+      const trigger = picker.querySelector('.color-picker-trigger');
+      const dropdown = picker.querySelector('.color-picker-dropdown');
+
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.color-picker-dropdown.open').forEach(d => {
+          if (d !== dropdown) d.classList.remove('open');
+        });
+        dropdown.classList.toggle('open');
+      });
+
+      dropdown.querySelectorAll('.color-picker-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const value = opt.getAttribute('data-value');
+          const term = editingProfile.groups[gi].terminals[ti];
+          term.color = value;
+          const colorObj = COLOR_OPTIONS.find(o => o.value === value);
+          const dotHtml = colorObj && colorObj.css
+            ? `<span class="color-dot" style="background:${colorObj.css}"></span>`
+            : '';
+          trigger.innerHTML = `${dotHtml} ${escapeHtml(colorObj?.label || 'Default')}`;
+          dropdown.querySelectorAll('.color-picker-option').forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          dropdown.classList.remove('open');
+        });
+      });
+    });
+
+    // Close color picker dropdowns when clicking outside
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.color-picker-dropdown.open').forEach(d => d.classList.remove('open'));
+    });
+
+    // Icon picker trigger buttons — open modal
+    document.querySelectorAll('.icon-picker-trigger').forEach(btn => {
+      const gi = parseInt(btn.getAttribute('data-gi'));
+      const ti = parseInt(btn.getAttribute('data-ti'));
+
+      btn.addEventListener('click', () => {
+        const term = editingProfile.groups[gi].terminals[ti];
+        openIconPicker(term.icon, (selectedValue) => {
+          term.icon = selectedValue;
+          // Update button display
+          if (selectedValue) {
+            btn.innerHTML = `<i class="codicon codicon-${escapeHtml(selectedValue)}"></i> <span>${escapeHtml(selectedValue)}</span>`;
+          } else {
+            btn.innerHTML = '<span>Select icon...</span>';
+          }
+        });
       });
     });
 
