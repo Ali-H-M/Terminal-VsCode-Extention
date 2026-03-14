@@ -17,6 +17,7 @@ export interface Profile {
   id: string;
   name: string;
   groups: TerminalGroup[];
+  closeOnRelaunch?: boolean; // close previously launched terminals from this profile before relaunching
 }
 
 /** Messages sent between extension and webview */
@@ -25,6 +26,8 @@ export type WebviewMessage =
   | { command: 'saveProfile'; profile: Profile }
   | { command: 'deleteProfile'; profileId: string }
   | { command: 'launchProfile'; profileId: string }
+  | { command: 'exportProfiles' }
+  | { command: 'importProfiles' }
   | { command: 'profilesLoaded'; profiles: Profile[] }
   | { command: 'profileSaved'; profile: Profile }
   | { command: 'error'; message: string };

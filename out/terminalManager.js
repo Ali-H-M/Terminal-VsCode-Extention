@@ -38,17 +38,33 @@ const vscode = __importStar(require("vscode"));
 class TerminalManager {
     constructor() {
         this.isLaunching = false;
+        // Track terminals opened per profile so we can close them on relaunch
+        this.profileTerminals = new Map();
     }
     async launchProfile(profile) {
         if (this.isLaunching) {
             vscode.window.showWarningMessage('A profile is already launching. Please wait.');
             return;
         }
+        // Close previously launched terminals for this profile if option is enabled
+        if (profile.closeOnRelaunch) {
+            const previous = this.profileTerminals.get(profile.id) ?? [];
+            for (const t of previous) {
+                try {
+                    t.dispose();
+                }
+                catch { /* already closed */ }
+            }
+            this.profileTerminals.set(profile.id, []);
+        }
         this.isLaunching = true;
+        const launched = [];
         try {
             for (const group of profile.groups) {
-                await this.launchGroup(group);
+                const terminals = await this.launchGroup(group);
+                launched.push(...terminals);
             }
+            this.profileTerminals.set(profile.id, launched);
             vscode.window.showInformationMessage(`Launched profile: ${profile.name}`);
         }
         catch (err) {
@@ -61,6 +77,7 @@ class TerminalManager {
     }
     async launchGroup(group) {
         let previousTerminal;
+        const result = [];
         for (let i = 0; i < group.terminals.length; i++) {
             const config = group.terminals[i];
             const shouldSplit = group.splitCount > 1 && i > 0 && previousTerminal !== undefined;
@@ -75,7 +92,9 @@ class TerminalManager {
             }
             await this.sendCommands(terminal, config.commands);
             previousTerminal = terminal;
+            result.push(terminal);
         }
+        return result;
     }
     createTerminal(config) {
         const options = {

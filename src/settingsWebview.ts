@@ -30,7 +30,6 @@ export class SettingsWebview {
         retainContextWhenHidden: true,
         localResourceRoots: [
           vscode.Uri.file(path.join(context.extensionPath, 'webview')),
-          vscode.Uri.joinPath(context.extensionUri, 'node_modules', '@vscode', 'codicons', 'dist'),
         ],
       }
     );
@@ -85,6 +84,19 @@ export class SettingsWebview {
             }
             break;
           }
+
+          case 'exportProfiles':
+            await vscode.commands.executeCommand('terminalLauncher.exportProfiles');
+            break;
+
+          case 'importProfiles':
+            await vscode.commands.executeCommand('terminalLauncher.importProfiles');
+            // Refresh profile list after import
+            this.panel.webview.postMessage({
+              command: 'profilesLoaded',
+              profiles: this.profileManager.getAllProfiles(),
+            });
+            break;
         }
       },
       null,
@@ -121,12 +133,8 @@ export class SettingsWebview {
     );
 
     const codiconsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this.context.extensionUri,
-        'node_modules',
-        '@vscode/codicons',
-        'dist',
-        'codicon.css'
+      vscode.Uri.file(
+        path.join(this.context.extensionPath, 'webview', 'codicon.css')
       )
     );
 

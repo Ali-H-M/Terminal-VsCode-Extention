@@ -508,3 +508,144 @@ label {
 .empty-state p {
   margin-bottom: 16px;
 }
+
+.empty-state button {
+  margin: 4px;
+}
+
+/* Profile list footer (new profile + import/export) */
+.list-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.list-footer-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* Inline form group (checkbox + label on one line) */
+.form-group-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.form-group-inline input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.form-group-inline label {
+  margin: 0;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+}
+
+/* Icon buttons (import/export with codicon) */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.icon-btn i,
+button > i.codicon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Toggle card (close-on-relaunch) */
+.toggle-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, #444));
+  border-radius: 4px;
+  background: var(--vscode-sideBar-background, transparent);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.toggle-card-on {
+  border-color: var(--vscode-focusBorder, #007acc);
+  background: var(--vscode-editor-selectionHighlightBackground, rgba(0,122,204,0.08));
+}
+
+.toggle-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toggle-card-title i {
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+.toggle-card-desc {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Toggle switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: var(--vscode-titleBar-inactiveForeground, #888);
+  transition: background 0.2s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 3px;
+  top: 3px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--vscode-button-background, #007acc);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+}

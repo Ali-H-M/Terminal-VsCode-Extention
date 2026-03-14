@@ -3,6 +3,8 @@ import { Profile, TerminalGroup, TerminalConfig } from './types';
 
 export class TerminalManager {
   private isLaunching = false;
+  // Track terminals opened per profile so we can close them on relaunch
+  private profileTerminals: Map<string, vscode.Terminal[]> = new Map();
 
   async launchProfile(profile: Profile): Promise<void> {
     if (this.isLaunching) {
@@ -10,11 +12,23 @@ export class TerminalManager {
       return;
     }
 
+    // Close previously launched terminals for this profile if option is enabled
+    if (profile.closeOnRelaunch) {
+      const previous = this.profileTerminals.get(profile.id) ?? [];
+      for (const t of previous) {
+        try { t.dispose(); } catch { /* already closed */ }
+      }
+      this.profileTerminals.set(profile.id, []);
+    }
+
     this.isLaunching = true;
+    const launched: vscode.Terminal[] = [];
     try {
       for (const group of profile.groups) {
-        await this.launchGroup(group);
+        const terminals = await this.launchGroup(group);
+        launched.push(...terminals);
       }
+      this.profileTerminals.set(profile.id, launched);
       vscode.window.showInformationMessage(`Launched profile: ${profile.name}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -24,8 +38,9 @@ export class TerminalManager {
     }
   }
 
-  private async launchGroup(group: TerminalGroup): Promise<void> {
+  private async launchGroup(group: TerminalGroup): Promise<vscode.Terminal[]> {
     let previousTerminal: vscode.Terminal | undefined;
+    const result: vscode.Terminal[] = [];
 
     for (let i = 0; i < group.terminals.length; i++) {
       const config = group.terminals[i];
@@ -43,7 +58,10 @@ export class TerminalManager {
 
       await this.sendCommands(terminal, config.commands);
       previousTerminal = terminal;
+      result.push(terminal);
     }
+
+    return result;
   }
 
   private createTerminal(config: TerminalConfig): vscode.Terminal {

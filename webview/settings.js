@@ -259,6 +259,9 @@
       case 'error':
         alert(message.message);
         break;
+      case 'exportDone':
+        // handled by extension
+        break;
     }
   });
 
@@ -269,7 +272,10 @@
         <h1>Terminal Launcher</h1>
         <div class="empty-state">
           <p>No profiles yet. Create one to get started!</p>
-          <button id="btn-new-profile">+ New Profile</button>
+          <button id="btn-new-profile"><i class="codicon codicon-add"></i> New Profile</button>
+          <button class="secondary icon-btn" id="btn-import" title="Import profiles from a JSON file">
+            <i class="codicon codicon-cloud-download"></i> Import Profiles
+          </button>
         </div>
       `;
     } else {
@@ -302,7 +308,17 @@
       app.innerHTML = `
         <h1>Terminal Launcher</h1>
         <div id="profile-list">${cardsHtml}</div>
-        <button id="btn-new-profile">+ New Profile</button>
+        <div class="list-footer">
+          <button id="btn-new-profile"><i class="codicon codicon-add"></i> New Profile</button>
+          <div class="list-footer-actions">
+            <button class="secondary icon-btn" id="btn-import" title="Import profiles from a JSON file">
+              <i class="codicon codicon-cloud-download"></i> Import
+            </button>
+            <button class="secondary icon-btn" id="btn-export" title="Export all profiles to a JSON file">
+              <i class="codicon codicon-cloud-upload"></i> Export
+            </button>
+          </div>
+        </div>
       `;
     }
 
@@ -338,6 +354,13 @@
     document.getElementById('btn-cancel-delete')?.addEventListener('click', () => {
       pendingDeleteId = null;
       renderProfileList();
+    });
+
+    document.getElementById('btn-export')?.addEventListener('click', () => {
+      vscode.postMessage({ command: 'exportProfiles' });
+    });
+    document.getElementById('btn-import')?.addEventListener('click', () => {
+      vscode.postMessage({ command: 'importProfiles' });
     });
   }
 
@@ -465,6 +488,16 @@
           <label>Profile Name</label>
           <input type="text" id="profile-name" value="${escapeHtml(p.name)}" placeholder="e.g. My Dev Setup" />
           <span id="profile-name-error" class="field-error" style="display:none;">Profile name is required</span>
+        </div>
+        <div class="toggle-card ${p.closeOnRelaunch ? 'toggle-card-on' : ''}">
+          <div class="toggle-card-text">
+            <span class="toggle-card-title"><i class="codicon codicon-close-all"></i> Close on Relaunch</span>
+            <span class="toggle-card-desc">Automatically close this profile's terminals before relaunching</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="close-on-relaunch" ${p.closeOnRelaunch ? 'checked' : ''} />
+            <span class="toggle-slider"></span>
+          </label>
         </div>
         <h2>Terminal Groups</h2>
         ${groupsHtml}
@@ -599,6 +632,13 @@
         editingProfile.groups.splice(gi, 1);
         renderEditor();
       });
+    });
+
+    // Close-on-relaunch toggle
+    document.getElementById('close-on-relaunch')?.addEventListener('change', (e) => {
+      editingProfile.closeOnRelaunch = e.target.checked;
+      const card = e.target.closest('.toggle-card');
+      if (card) card.classList.toggle('toggle-card-on', e.target.checked);
     });
 
     // Clear validation on name input
