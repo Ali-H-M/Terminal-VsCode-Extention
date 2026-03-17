@@ -49,11 +49,11 @@ Quick Launch can be assign to Keyboard Shortcut:
 
 ### Profile Configuration
 
-![Terminal Builder](Profile-ConfigV1.2.png)
+![Terminal Builder](Profile-ConfigV1.3.png)
 
 ### Profile Manager
 
-![Terminal Launcher](Terminal-LauncherV1.2.png)
+![Terminal Launcher](Terminal-LauncherV1.3.png)
 
 ### Running Terminals
 
