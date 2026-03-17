@@ -1,22 +1,22 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function (o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+        desc = { enumerable: true, get: function () { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
+}) : (function (o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function (o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
+}) : function (o, v) {
     o["default"] = v;
 });
 var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
+    var ownKeys = function (o) {
         ownKeys = Object.getOwnPropertyNames || function (o) {
             var ar = [];
             for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
@@ -70,11 +70,19 @@ function activate(context) {
             return;
         }
         const sorted = [...profiles].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
-        const picked = await vscode.window.showQuickPick(sorted.map(p => ({
-            label: (p.pinned ? '$(pinned) ' : '') + p.name,
-            description: `${p.groups.length} group(s), ${p.groups.reduce((s, g) => s + g.terminals.length, 0)} terminal(s)`,
-            id: p.id,
-        })), { placeHolder: 'Select a profile to launch' });
+        const picked = await vscode.window.showQuickPick(sorted.map(p => {
+            const terminalNames = p.groups.flatMap(g => g.terminals.map(t => t.name)).filter(Boolean);
+            return {
+                label: (p.pinned ? '$(pinned) ' : '') + p.name,
+                description: `${p.groups.length} group(s) · ${p.groups.reduce((s, g) => s + g.terminals.length, 0)} terminal(s)`,
+                detail: terminalNames.length > 0 ? terminalNames.join('  ·  ') : undefined,
+                id: p.id,
+            };
+        }), {
+            placeHolder: 'Search and launch a profile',
+            matchOnDescription: true,
+            matchOnDetail: true,
+        });
         if (picked) {
             const profile = profileManager.getProfile(picked.id);
             if (profile) {

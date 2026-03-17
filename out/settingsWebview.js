@@ -91,6 +91,29 @@ class SettingsWebview {
                     }
                     break;
                 }
+                case 'checkHealth': {
+                    const profile = this.profileManager.getProfile(message.profileId);
+                    if (profile) {
+                        const issues = await this.terminalManager.checkProfileHealth(profile);
+                        this.panel.webview.postMessage({
+                            command: 'healthResult',
+                            profileId: message.profileId,
+                            issues,
+                        });
+                    }
+                    break;
+                }
+                case 'checkCwdPath': {
+                    const exists = await this.terminalManager.checkSinglePath(message.path);
+                    this.panel.webview.postMessage({
+                        command: 'cwdCheckResult',
+                        gi: message.gi,
+                        ti: message.ti,
+                        exists,
+                        path: message.path,
+                    });
+                    break;
+                }
                 case 'exportProfiles':
                     await vscode.commands.executeCommand('terminalLauncher.exportProfiles');
                     break;

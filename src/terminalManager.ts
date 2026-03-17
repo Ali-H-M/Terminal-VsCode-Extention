@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs/promises';
 import { Profile, TerminalGroup, TerminalConfig } from './types';
 
 export class TerminalManager {
@@ -25,6 +26,7 @@ export class TerminalManager {
     const launched: vscode.Terminal[] = [];
     try {
       for (const group of profile.groups) {
+        if (group.disabled) { continue; }
         const terminals = await this.launchGroup(group);
         launched.push(...terminals);
       }
@@ -109,6 +111,45 @@ export class TerminalManager {
         terminal.sendText(cmd);
         await this.delay(100);
       }
+    }
+  }
+
+  /** Check if all cwd paths in a profile exist on disk. Returns structured issues. */
+  async checkProfileHealth(profile: Profile): Promise<Array<{ group: number; terminal: string; path: string }>> {
+    const issues: Array<{ group: number; terminal: string; path: string }> = [];
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+    const nodePath = require('path') as typeof import('path');
+
+    for (let gi = 0; gi < profile.groups.length; gi++) {
+      if (profile.groups[gi].disabled) { continue; }
+      for (const term of profile.groups[gi].terminals) {
+        const raw = term.cwd?.trim();
+        if (!raw) { continue; }
+        const resolved = (workspaceRoot && !nodePath.isAbsolute(raw))
+          ? nodePath.join(workspaceRoot, raw)
+          : raw;
+        try {
+          await fs.access(resolved);
+        } catch {
+          issues.push({ group: gi + 1, terminal: term.name || 'Terminal', path: raw });
+        }
+      }
+    }
+    return issues;
+  }
+
+  /** Check a single cwd path — used by the editor inline check */
+  async checkSinglePath(rawPath: string): Promise<boolean> {
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+    const nodePath = require('path') as typeof import('path');
+    const resolved = (workspaceRoot && !nodePath.isAbsolute(rawPath))
+      ? nodePath.join(workspaceRoot, rawPath)
+      : rawPath;
+    try {
+      await fs.access(resolved);
+      return true;
+    } catch {
+      return false;
     }
   }
 

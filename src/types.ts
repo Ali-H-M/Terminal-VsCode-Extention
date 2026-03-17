@@ -11,6 +11,7 @@ export interface TerminalConfig {
 export interface TerminalGroup {
   terminals: TerminalConfig[];
   splitCount: number; // 1 = single terminal, 2-4 = number of split panes
+  disabled?: boolean; // if true, this group is skipped on launch
 }
 
 /** A named, saveable profile */
@@ -32,6 +33,10 @@ export type WebviewMessage =
   | { command: 'exportProfiles' }
   | { command: 'importProfiles' }
   | { command: 'reorderProfiles'; ids: string[] }
+  | { command: 'checkHealth'; profileId: string }
+  | { command: 'checkCwdPath'; path: string; gi: number; ti: number }
   | { command: 'profilesLoaded'; profiles: Profile[] }
   | { command: 'profileSaved'; profile: Profile }
+  | { command: 'healthResult'; profileId: string; issues: Array<{ group: number; terminal: string; path: string }> }
+  | { command: 'cwdCheckResult'; gi: number; ti: number; exists: boolean; path: string }
   | { command: 'error'; message: string };

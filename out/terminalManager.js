@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TerminalManager = void 0;
 const vscode = __importStar(require("vscode"));
+const fs = __importStar(require("fs/promises"));
 class TerminalManager {
     constructor() {
         this.isLaunching = false;
@@ -61,6 +62,9 @@ class TerminalManager {
         const launched = [];
         try {
             for (const group of profile.groups) {
+                if (group.disabled) {
+                    continue;
+                }
                 const terminals = await this.launchGroup(group);
                 launched.push(...terminals);
             }
@@ -133,6 +137,48 @@ class TerminalManager {
                 terminal.sendText(cmd);
                 await this.delay(100);
             }
+        }
+    }
+    /** Check if all cwd paths in a profile exist on disk. Returns structured issues. */
+    async checkProfileHealth(profile) {
+        const issues = [];
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+        const nodePath = require('path');
+        for (let gi = 0; gi < profile.groups.length; gi++) {
+            if (profile.groups[gi].disabled) {
+                continue;
+            }
+            for (const term of profile.groups[gi].terminals) {
+                const raw = term.cwd?.trim();
+                if (!raw) {
+                    continue;
+                }
+                const resolved = (workspaceRoot && !nodePath.isAbsolute(raw))
+                    ? nodePath.join(workspaceRoot, raw)
+                    : raw;
+                try {
+                    await fs.access(resolved);
+                }
+                catch {
+                    issues.push({ group: gi + 1, terminal: term.name || 'Terminal', path: raw });
+                }
+            }
+        }
+        return issues;
+    }
+    /** Check a single cwd path — used by the editor inline check */
+    async checkSinglePath(rawPath) {
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+        const nodePath = require('path');
+        const resolved = (workspaceRoot && !nodePath.isAbsolute(rawPath))
+            ? nodePath.join(workspaceRoot, rawPath)
+            : rawPath;
+        try {
+            await fs.access(resolved);
+            return true;
+        }
+        catch {
+            return false;
         }
     }
     delay(ms) {

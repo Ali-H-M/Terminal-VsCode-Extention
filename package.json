@@ -2,7 +2,7 @@
   "name": "terminal-profile-launcher",
   "displayName": "Terminal Profile Launcher",
   "description": "Launch multiple pre-configured terminal tabs with auto-run commands, split layouts, and saveable profiles",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "publisher": "Ali-H-M",
   "engines": {
     "vscode": "^1.85.0"
@@ -52,8 +52,21 @@
       {
         "command": "terminalLauncher.importProfiles",
         "title": "Terminal Launcher: Import Profiles"
+      },
+      {
+        "command": "terminalLauncher.saveCurrentTerminals",
+        "title": "Save Current Terminals as Profile",
+        "icon": "$(save)"
       }
-    ]
+    ],
+    "menus": {
+      "terminal/title/context": [
+        {
+          "command": "terminalLauncher.saveCurrentTerminals",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

@@ -403,6 +403,49 @@
     activeIconPickerCallback = null;
   }
 
+  // --- Health issues popup ---
+  function showHealthPopup(anchorEl, issues) {
+    // Remove any existing popup
+    const existing = document.getElementById('health-popup');
+    if (existing) { existing.remove(); }
+
+    const popup = document.createElement('div');
+    popup.id = 'health-popup';
+    popup.className = 'health-popup';
+    popup.innerHTML = `
+      <div class="health-popup-header">
+        <i class="codicon codicon-warning"></i> Path Issues
+        <button class="health-popup-close icon-only secondary" title="Close"><i class="codicon codicon-close"></i></button>
+      </div>
+      <ul class="health-popup-list">
+        ${issues.map(i => `
+          <li>
+            <span class="health-popup-group">Group ${i.group}</span>
+            <span class="health-popup-terminal">${escapeHtml(i.terminal)}</span>
+            <span class="health-popup-path">${escapeHtml(i.path)}</span>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+
+    // Position below anchor
+    document.body.appendChild(popup);
+    const rect = anchorEl.getBoundingClientRect();
+    popup.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+    popup.style.left = Math.max(8, rect.left + window.scrollX) + 'px';
+
+    popup.querySelector('.health-popup-close').addEventListener('click', () => popup.remove());
+
+    // Dismiss on outside click
+    const dismiss = (e) => {
+      if (!popup.contains(e.target) && e.target !== anchorEl) {
+        popup.remove();
+        document.removeEventListener('click', dismiss, true);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', dismiss, true), 0);
+  }
+
   // Request profiles on load
   window.addEventListener('DOMContentLoaded', () => {
     vscode.postMessage({ command: 'getProfiles' });
@@ -422,6 +465,44 @@
         editingProfile = null;
         vscode.postMessage({ command: 'getProfiles' });
         break;
+      case 'healthResult': {
+        const { profileId, issues } = message;
+        const el = document.getElementById(`health-status-${profileId}`);
+        if (!el) { break; }
+        if (issues.length === 0) {
+          el.innerHTML = '<i class="codicon codicon-check" style="color:var(--hz-green)"></i> OK';
+          el.title = 'All paths exist';
+          el.onclick = null;
+          el.onmousedown = null;
+          el.style.cursor = 'default';
+        } else {
+          el.innerHTML = `<i class="codicon codicon-warning" style="color:#cca700"></i> ${issues.length} issue(s)`;
+          el.title = issues.map(i => `Group ${i.group} · "${i.terminal}": ${i.path}`).join('\n');
+          el.style.cursor = 'pointer';
+          el.onclick = null;
+          el.onmousedown = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            showHealthPopup(el, issues);
+          };
+        }
+        break;
+      }
+      case 'cwdCheckResult': {
+        const { gi, ti, exists, path } = message;
+        const indicator = document.getElementById(`cwd-check-${gi}-${ti}`);
+        if (!indicator) { break; }
+        if (!path.trim()) {
+          indicator.innerHTML = '';
+        } else if (exists) {
+          indicator.innerHTML = '<i class="codicon codicon-check cwd-ok"></i>';
+          indicator.title = 'Path exists';
+        } else {
+          indicator.innerHTML = '<i class="codicon codicon-warning cwd-error"></i>';
+          indicator.title = `Path not found: ${path}`;
+        }
+        break;
+      }
       case 'error':
         alert(message.message);
         break;
@@ -459,7 +540,7 @@
           <div class="profile-card ${isDeleting ? 'profile-card-deleting' : ''} ${p.pinned ? 'profile-card-pinned' : ''}" data-id="${p.id}">
             <div class="profile-card-info">
               <h3>${badges}${escapeHtml(p.name)}</h3>
-              <p>${groupCount} group(s), ${terminalCount} terminal(s)</p>
+              <p>${groupCount} group(s), ${terminalCount} terminal(s) <span class="health-status" id="health-status-${p.id}"></span></p>
             </div>
             ${isDeleting
             ? `<div class="profile-card-actions">
@@ -470,6 +551,9 @@
             : `<div class="profile-card-actions">
                    <button class="icon-only secondary ${p.pinned ? 'active' : ''}" data-action="pin" data-id="${p.id}" title="${p.pinned ? 'Unpin profile' : 'Pin to top'}">
                      <i class="codicon codicon-${p.pinned ? 'pinned' : 'pin'}"></i>
+                   </button>
+                   <button class="icon-only secondary" data-action="health" data-id="${p.id}" title="Check paths exist on disk">
+                     <i class="codicon codicon-pulse"></i>
                    </button>
                    <button data-action="launch" data-id="${p.id}">Launch</button>
                    <button class="secondary" data-action="edit" data-id="${p.id}">Edit</button>
@@ -509,6 +593,10 @@
         const id = e.currentTarget.getAttribute('data-id');
         if (action === 'launch') {
           vscode.postMessage({ command: 'launchProfile', profileId: id });
+        } else if (action === 'health') {
+          const el = document.getElementById(`health-status-${id}`);
+          if (el) { el.innerHTML = '<i class="codicon codicon-loading codicon-modifier-spin"></i>'; }
+          vscode.postMessage({ command: 'checkHealth', profileId: id });
         } else if (action === 'pin') {
           const profile = profiles.find(p => p.id === id);
           if (profile) {
@@ -551,8 +639,8 @@
 
     listEl && listEl.querySelectorAll('.profile-card').forEach(card => {
       card.addEventListener('mousedown', (e) => {
-        // Only drag from the card body, not from buttons
-        if (e.target.closest('button')) { return; }
+        // Only drag from the card body, not from buttons or health status spans
+        if (e.target.closest('button') || e.target.closest('.health-status')) { return; }
         e.preventDefault();
 
         dragEl = card;
@@ -684,8 +772,14 @@
             </div>
             <div class="form-group" style="margin-top: 8px;">
               <label>Working Directory <span class="field-hint">(optional — relative or absolute)</span></label>
-              <input type="text" data-field="terminal-cwd" data-gi="${gi}" data-ti="${ti}"
-                     value="${escapeHtml(term.cwd || '')}" placeholder="e.g. ./frontend or /home/user/project" />
+              <div class="cwd-input-row">
+                <input type="text" data-field="terminal-cwd" data-gi="${gi}" data-ti="${ti}"
+                       value="${escapeHtml(term.cwd || '')}" placeholder="e.g. ./frontend or /home/user/project" />
+                <button type="button" class="icon-only secondary cwd-check-btn" data-gi="${gi}" data-ti="${ti}" title="Check if this path exists on disk">
+                  <i class="codicon codicon-pulse"></i>
+                </button>
+                <span class="cwd-check-indicator" id="cwd-check-${gi}-${ti}"></span>
+              </div>
             </div>
             <div class="form-group" style="margin-top: 8px;">
               <label>Commands <span class="field-hint">(one per line, run in order)</span></label>
@@ -727,16 +821,25 @@
       ).join('');
 
       return `
-        <div class="group-section">
+        <div class="group-section ${group.disabled ? 'group-disabled' : ''}" data-gi="${gi}">
           <div class="group-header">
             <h3>Group ${gi + 1}</h3>
-            ${p.groups.length > 1
+            <div class="group-header-actions">
+              <label class="group-toggle-label" title="${group.disabled ? 'Enable this group' : 'Disable this group (skip on launch)'}">
+                <span class="group-toggle-text">${group.disabled ? 'Disabled' : 'Active'}</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" class="group-toggle" data-gi="${gi}" ${group.disabled ? '' : 'checked'} />
+                  <span class="toggle-slider"></span>
+                </label>
+              </label>
+              ${p.groups.length > 1
           ? `<button class="small secondary" data-remove-group="${gi}">Remove Group</button>`
           : ''}
+            </div>
           </div>
           <div class="form-group split-select-row">
             <label>Terminal Layout</label>
-            <select data-field="group-split" data-gi="${gi}">${splitOptions}</select>
+            <select data-field="group-split" data-gi="${gi}" ${group.disabled ? 'disabled' : ''}>${splitOptions}</select>
           </div>
           ${terminalsHtml}
         </div>
@@ -848,9 +951,28 @@
           term.name = e.target.value;
         } else if (field === 'terminal-cwd') {
           term.cwd = e.target.value;
+          // Clear stale indicator when user edits the path
+          const indicator = document.getElementById(`cwd-check-${gi}-${ti}`);
+          if (indicator) { indicator.innerHTML = ''; }
         } else if (field === 'terminal-commands') {
           term.commands = e.target.value.split('\n');
         }
+      });
+    });
+
+    // CWD path check buttons
+    document.querySelectorAll('.cwd-check-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const gi = parseInt(btn.getAttribute('data-gi'));
+        const ti = parseInt(btn.getAttribute('data-ti'));
+        const path = editingProfile.groups[gi].terminals[ti].cwd?.trim() || '';
+        const indicator = document.getElementById(`cwd-check-${gi}-${ti}`);
+        if (!path) {
+          if (indicator) { indicator.innerHTML = '<span style="font-size:11px;opacity:0.6">No path set</span>'; }
+          return;
+        }
+        if (indicator) { indicator.innerHTML = '<i class="codicon codicon-loading codicon-modifier-spin"></i>'; }
+        vscode.postMessage({ command: 'checkCwdPath', path, gi, ti });
       });
     });
 
@@ -942,6 +1064,24 @@
         }
         group.terminals = group.terminals.slice(0, newCount);
         renderEditor();
+      });
+    });
+
+    // Group active/disabled toggles
+    document.querySelectorAll('.group-toggle').forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const gi = parseInt(e.target.getAttribute('data-gi'));
+        const group = editingProfile.groups[gi];
+        group.disabled = !e.target.checked;
+        // Update visual state without full re-render
+        const section = document.querySelector(`.group-section[data-gi="${gi}"]`);
+        if (section) {
+          section.classList.toggle('group-disabled', !!group.disabled);
+          const label = section.querySelector('.group-toggle-text');
+          if (label) { label.textContent = group.disabled ? 'Disabled' : 'Active'; }
+          const splitSelect = section.querySelector('[data-field="group-split"]');
+          if (splitSelect) { splitSelect.disabled = !!group.disabled; }
+        }
       });
     });
 

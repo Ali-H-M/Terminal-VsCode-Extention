@@ -46,12 +46,20 @@ export function activate(context: vscode.ExtensionContext) {
 
       const sorted = [...profiles].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
       const picked = await vscode.window.showQuickPick(
-        sorted.map(p => ({
-          label: (p.pinned ? '$(pinned) ' : '') + p.name,
-          description: `${p.groups.length} group(s), ${p.groups.reduce((s, g) => s + g.terminals.length, 0)} terminal(s)`,
-          id: p.id,
-        })),
-        { placeHolder: 'Select a profile to launch' }
+        sorted.map(p => {
+          const terminalNames = p.groups.flatMap(g => g.terminals.map(t => t.name)).filter(Boolean);
+          return {
+            label: (p.pinned ? '$(pinned) ' : '') + p.name,
+            description: `${p.groups.length} group(s) · ${p.groups.reduce((s, g) => s + g.terminals.length, 0)} terminal(s)`,
+            detail: terminalNames.length > 0 ? terminalNames.join('  ·  ') : undefined,
+            id: p.id,
+          };
+        }),
+        {
+          placeHolder: 'Search and launch a profile',
+          matchOnDescription: true,
+          matchOnDetail: true,
+        }
       );
 
       if (picked) {
