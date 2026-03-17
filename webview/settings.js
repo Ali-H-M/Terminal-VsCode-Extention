@@ -523,6 +523,9 @@
           <button class="secondary icon-btn" id="btn-import" title="Import profiles from a JSON file">
             <i class="codicon codicon-cloud-download"></i> Import Profiles
           </button>
+          <button class="secondary icon-btn" id="btn-import-termprofile" title="Import from .termprofile file in workspace root">
+            <i class="codicon codicon-file-add"></i> From .termprofile
+          </button>
         </div>
       `;
     } else {
@@ -570,6 +573,12 @@
         <div class="list-footer">
           <button id="btn-new-profile"><i class="codicon codicon-add"></i> New Profile</button>
           <div class="list-footer-actions">
+            <button class="secondary icon-btn" id="btn-import-termprofile" title="Import from .termprofile file in workspace root">
+              <i class="codicon codicon-file-add"></i> Import From .termprofile
+            </button>
+            <button class="secondary icon-btn" id="btn-create-termprofile" title="Create .termprofile from current profiles">
+              <i class="codicon codicon-file-code"></i> Create .termprofile
+            </button>
             <button class="secondary icon-btn" id="btn-import" title="Import profiles from a JSON file">
               <i class="codicon codicon-cloud-download"></i> Import
             </button>
@@ -630,6 +639,12 @@
     });
     document.getElementById('btn-import')?.addEventListener('click', () => {
       vscode.postMessage({ command: 'importProfiles' });
+    });
+    document.getElementById('btn-import-termprofile')?.addEventListener('click', () => {
+      vscode.postMessage({ command: 'importFromTermprofile' });
+    });
+    document.getElementById('btn-create-termprofile')?.addEventListener('click', () => {
+      vscode.postMessage({ command: 'createTermprofile' });
     });
 
     // Live drag-to-reorder via pointer events

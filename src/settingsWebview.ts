@@ -9,6 +9,15 @@ export class SettingsWebview {
   private readonly panel: vscode.WebviewPanel;
   private disposables: vscode.Disposable[] = [];
 
+  public static refresh(profileManager: ProfileManager) {
+    if (SettingsWebview.currentPanel) {
+      SettingsWebview.currentPanel.panel.webview.postMessage({
+        command: 'profilesLoaded',
+        profiles: profileManager.getAllProfiles(),
+      });
+    }
+  }
+
   public static createOrShow(
     context: vscode.ExtensionContext,
     profileManager: ProfileManager,
@@ -125,6 +134,18 @@ export class SettingsWebview {
               command: 'profilesLoaded',
               profiles: this.profileManager.getAllProfiles(),
             });
+            break;
+
+          case 'importFromTermprofile':
+            await vscode.commands.executeCommand('terminalLauncher.importFromTermprofile');
+            this.panel.webview.postMessage({
+              command: 'profilesLoaded',
+              profiles: this.profileManager.getAllProfiles(),
+            });
+            break;
+
+          case 'createTermprofile':
+            await vscode.commands.executeCommand('terminalLauncher.createTermprofile');
             break;
         }
       },

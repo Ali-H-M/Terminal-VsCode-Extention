@@ -2,7 +2,7 @@
   "name": "terminal-profile-launcher",
   "displayName": "Terminal Profile Launcher",
   "description": "Launch multiple pre-configured terminal tabs with auto-run commands, split layouts, and saveable profiles",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "publisher": "Ali-H-M",
   "engines": {
     "vscode": "^1.85.0"
@@ -22,13 +22,17 @@
     "split",
     "automation",
     "workspace",
-    "multi-terminal"
+    "multi-terminal",
+    "termprofile",
+    "team"
   ],
   "sponsor": {
     "url": "https://github.com/sponsors/Ali-H-M"
   },
   "icon": "logo.ico",
-  "activationEvents": [],
+  "activationEvents": [
+    "workspaceContains:.termprofile"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -57,6 +61,14 @@
         "command": "terminalLauncher.saveCurrentTerminals",
         "title": "Save Current Terminals as Profile",
         "icon": "$(save)"
+      },
+      {
+        "command": "terminalLauncher.importFromTermprofile",
+        "title": "Terminal Launcher: Import from .termprofile"
+      },
+      {
+        "command": "terminalLauncher.createTermprofile",
+        "title": "Terminal Launcher: Create .termprofile for Workspace"
       }
     ],
     "menus": {

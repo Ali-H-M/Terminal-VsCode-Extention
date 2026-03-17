@@ -37,6 +37,14 @@ exports.SettingsWebview = void 0;
 const vscode = __importStar(require("vscode"));
 const path = __importStar(require("path"));
 class SettingsWebview {
+    static refresh(profileManager) {
+        if (SettingsWebview.currentPanel) {
+            SettingsWebview.currentPanel.panel.webview.postMessage({
+                command: 'profilesLoaded',
+                profiles: profileManager.getAllProfiles(),
+            });
+        }
+    }
     static createOrShow(context, profileManager, terminalManager) {
         const column = vscode.ViewColumn.One;
         if (SettingsWebview.currentPanel) {
@@ -124,6 +132,16 @@ class SettingsWebview {
                         command: 'profilesLoaded',
                         profiles: this.profileManager.getAllProfiles(),
                     });
+                    break;
+                case 'importFromTermprofile':
+                    await vscode.commands.executeCommand('terminalLauncher.importFromTermprofile');
+                    this.panel.webview.postMessage({
+                        command: 'profilesLoaded',
+                        profiles: this.profileManager.getAllProfiles(),
+                    });
+                    break;
+                case 'createTermprofile':
+                    await vscode.commands.executeCommand('terminalLauncher.createTermprofile');
                     break;
             }
         }, null, this.disposables);

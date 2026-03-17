@@ -24,6 +24,13 @@ export interface Profile {
   autoLaunch?: boolean;      // auto-launch this profile when the workspace opens
 }
 
+/** Format of a .termprofile file at repo root */
+export interface TermprofileFile {
+  version: 1;
+  description?: string;
+  profiles: Omit<Profile, 'id'>[];
+}
+
 /** Messages sent between extension and webview */
 export type WebviewMessage =
   | { command: 'getProfiles' }
@@ -39,4 +46,7 @@ export type WebviewMessage =
   | { command: 'profileSaved'; profile: Profile }
   | { command: 'healthResult'; profileId: string; issues: Array<{ group: number; terminal: string; path: string }> }
   | { command: 'cwdCheckResult'; gi: number; ti: number; exists: boolean; path: string }
-  | { command: 'error'; message: string };
+  | { command: 'error'; message: string }
+  // .termprofile repo file
+  | { command: 'importFromTermprofile' }
+  | { command: 'createTermprofile' };

@@ -40,9 +40,12 @@ const fs = __importStar(require("fs/promises"));
 const profileManager_1 = require("./profileManager");
 const terminalManager_1 = require("./terminalManager");
 const settingsWebview_1 = require("./settingsWebview");
+const termprofileWatcher_1 = require("./termprofileWatcher");
 function activate(context) {
     const profileManager = new profileManager_1.ProfileManager(context.globalState);
     const terminalManager = new terminalManager_1.TerminalManager();
+    // Start watching for .termprofile in the workspace
+    const termprofileWatcher = new termprofileWatcher_1.TermprofileWatcher(profileManager);
     // Status bar button
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
     statusBarItem.text = '$(terminal) Launch Terminal';
@@ -160,7 +163,6 @@ function activate(context) {
         let count = 0;
         for (const p of imported) {
             if (p && typeof p.name === 'string' && Array.isArray(p.groups)) {
-                // Assign a fresh ID to avoid collisions on merge
                 if (choice === 'Merge with existing profiles') {
                     p.id = Date.now().toString(36) + Math.random().toString(36).substring(2, 11);
                 }
@@ -169,6 +171,64 @@ function activate(context) {
             }
         }
         vscode.window.showInformationMessage(`Imported ${count} profile(s).`);
+    }));
+    // Import profiles from .termprofile file in workspace root
+    context.subscriptions.push(vscode.commands.registerCommand('terminalLauncher.importFromTermprofile', async () => {
+        const files = await vscode.workspace.findFiles('.termprofile', null, 1);
+        if (files.length === 0) {
+            vscode.window.showWarningMessage('No .termprofile file found in the workspace root.');
+            return;
+        }
+        const existing = profileManager.getAllProfiles();
+        const strategyChoice = existing.length > 0
+            ? await vscode.window.showQuickPick(['Merge with existing profiles', 'Replace all existing profiles'], { placeHolder: 'How to handle existing profiles?' })
+            : 'Merge with existing profiles';
+        if (!strategyChoice) {
+            return;
+        }
+        const strategy = strategyChoice === 'Replace all existing profiles' ? 'replace' : 'merge';
+        const count = await termprofileWatcher.importFromFile(files[0], strategy);
+        if (count > 0) {
+            vscode.window.showInformationMessage(`Imported ${count} profile(s) from .termprofile.`);
+            // Refresh the webview if it's open
+            settingsWebview_1.SettingsWebview.refresh(profileManager);
+        }
+    }));
+    // Create a .termprofile file from selected profiles
+    context.subscriptions.push(vscode.commands.registerCommand('terminalLauncher.createTermprofile', async () => {
+        const folder = vscode.workspace.workspaceFolders?.[0];
+        if (!folder) {
+            vscode.window.showWarningMessage('No workspace folder is open.');
+            return;
+        }
+        const profiles = profileManager.getAllProfiles();
+        if (profiles.length === 0) {
+            vscode.window.showWarningMessage('No profiles to export.');
+            return;
+        }
+        // Let user pick which profiles to include
+        const picks = await vscode.window.showQuickPick(profiles.map(p => ({
+            label: p.name,
+            description: `${p.groups.length} group(s) · ${p.groups.reduce((s, g) => s + g.terminals.length, 0)} terminal(s)`,
+            picked: true, // default: all selected
+            id: p.id,
+        })), {
+            placeHolder: 'Select profiles to include in .termprofile',
+            canPickMany: true,
+        });
+        if (!picks || picks.length === 0) {
+            return;
+        }
+        const selected = profiles.filter(p => picks.some(pick => pick.id === p.id));
+        // Strip machine-local IDs before writing to the shared file
+        const exportable = selected.map(({ id: _id, ...rest }) => rest);
+        const fileContent = JSON.stringify({ version: 1, profiles: exportable }, null, 2);
+        const uri = vscode.Uri.joinPath(folder.uri, '.termprofile');
+        await vscode.workspace.fs.writeFile(uri, Buffer.from(fileContent, 'utf8'));
+        const open = await vscode.window.showInformationMessage(`.termprofile created with ${selected.length} profile(s). Add it to version control so your team can use it.`, 'Open File');
+        if (open === 'Open File') {
+            await vscode.window.showTextDocument(uri);
+        }
     }));
 }
 function deactivate() { }

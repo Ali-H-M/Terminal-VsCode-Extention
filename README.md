@@ -11,8 +11,9 @@ Save and launch sets of pre-configured terminals with a single command. Open mul
 - **Split terminals** — up to 4 panels side-by-side, each with its own commands
 - **Custom icons & colors** — assign any VS Code icon and color for easy identification
 - **Saveable profiles** — name and save configurations, switch between projects instantly
-- **Import / Export** — back up profiles to JSON and share them across machines or with teammates
-- **Close on relaunch** — optionally close the previous terminals before reopening a profile
+- **Import / Export** — back up profiles to JSON and share them across machines
+- **Path health checks** — verify that all `cwd` paths in a profile exist/valid at any time
+- **Team profiles via `.termprofile`** — commit a shared profile file to your repo so the whole team gets the same terminal setup automatically
 
 ## Usage
 
@@ -49,12 +50,32 @@ Quick Launch can be assign to Keyboard Shortcut:
 
 ### Profile Configuration
 
-![Terminal Builder](Profile-ConfigV1.3.png)
+![Terminal Builder](Profile-ConfigV1.5.png)
 
 ### Profile Manager
 
-![Terminal Launcher](Terminal-LauncherV1.3.png)
+![Terminal Launcher](Terminal-LauncherV1.5.png)
 
 ### Running Terminals
 
 ![Terminal Run](Terminal-RunV1.2.png)
+
+## Team Profiles — `.termprofile`
+
+The `.termprofile` file lets you define terminal profiles at the repo level, similar to how `.gitignore` works for Git. Commit it to version control and every team member gets the same terminal setup when they open the project (extension is needed).
+
+### Creating a `.termprofile`
+
+**From the Settings panel:** click **Create .termprofile**. A multi-select picker lets you choose which of your saved profiles to include. The file get created at the workspace root.
+
+**Manual:** click **Import From .termprofile** in the Settings panel footer. You'll be asked whether to merge with or replace your existing profiles.
+
+### Recommending the extension to your team
+
+Add a `.vscode/extensions.json` file to your repo so VS Code suggests installing Terminal Launcher when someone clones the project:
+
+```json
+{
+  "recommendations": ["Ali-H-M.terminal-profile-launcher"]
+}
+```
