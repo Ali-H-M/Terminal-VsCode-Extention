@@ -79,3 +79,7 @@ Add a `.vscode/extensions.json` file to your repo so VS Code suggests installing
   "recommendations": ["Ali-H-M.terminal-profile-launcher"]
 }
 ```
+
+### Found a bug or have a suggestion?
+
+Please [open a GitHub issue](https://github.com/your-repo/issues) or email [alixxgam@gmail.com](mailto:alixxgam@gmail.com).

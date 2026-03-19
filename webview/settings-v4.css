@@ -190,6 +190,63 @@ button > i.codicon {
   line-height: 1;
 }
 
+/* ═══════════════ SPLIT BUTTON ═══════════════ */
+.split-btn-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+.split-btn-main {
+  border-radius: var(--hz-radius-sm) 0 0 var(--hz-radius-sm) !important;
+  border-right: none !important;
+}
+.split-btn-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px !important;
+  border-radius: 0 var(--hz-radius-sm) var(--hz-radius-sm) 0 !important;
+  border-left: 1px solid var(--hz-border) !important;
+  min-width: unset !important;
+}
+.split-btn-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 200;
+  min-width: 220px;
+  overflow: hidden;
+  background-color: var(--vscode-dropdown-background, var(--vscode-input-background));
+  border: 1px solid var(--hz-border);
+  border-radius: var(--hz-radius-sm);
+  padding: 4px 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.split-btn-dropdown.open {
+  display: block;
+}
+.split-btn-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 14px;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  text-align: left;
+  font-size: 13px;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+}
+.split-btn-option:hover {
+  background: var(--vscode-list-hoverBackground) !important;
+}
+.split-btn-option i.codicon {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
 /* ═══════════════ INPUTS (Softer corners) ═══════════════ */
 input[type="text"],
 textarea,
@@ -687,6 +744,24 @@ label {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+}
+.group-header-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.group-collapse-btn {
+  width: 22px !important;
+  height: 22px !important;
+  padding: 0 !important;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.group-collapse-btn:hover {
+  opacity: 1;
+}
+.group-collapsed .group-header {
+  margin-bottom: 0;
 }
 .group-header-actions {
   display: flex;

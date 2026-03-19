@@ -5,6 +5,7 @@
   let profiles = [];
   let editingProfile = null; // null = list view, object = editing
   let pendingDeleteId = null; // track delete confirmation
+  let collapsedGroups = new Set(); // set of gi indices that are collapsed
 
   // All codicon icon IDs (same as VSCode's "Change Icon" picker)
   const ALL_ICONS = [
@@ -523,9 +524,18 @@
           <button class="secondary icon-btn" id="btn-import" title="Import profiles from a JSON file">
             <i class="codicon codicon-cloud-download"></i> Import Profiles
           </button>
-          <button class="secondary icon-btn" id="btn-import-termprofile" title="Import from .termprofile file in workspace root">
-            <i class="codicon codicon-file-add"></i> From .termprofile
-          </button>
+          <div class="split-btn-wrapper" id="termprofile-split-empty">
+            <button class="secondary icon-btn split-btn-main" id="btn-import-termprofile" title="Import from .termprofile file in workspace root">
+              <i class="codicon codicon-file-code"></i> .termprofile
+            </button>
+            <button class="secondary split-btn-arrow" data-split="termprofile-split-empty" title="More .termprofile actions">
+              <i class="codicon codicon-chevron-down"></i>
+            </button>
+            <div class="split-btn-dropdown">
+              <button class="split-btn-option" data-termprofile-action="import"><i class="codicon codicon-file-add"></i> Import from .termprofile</button>
+              <button class="split-btn-option" data-termprofile-action="create"><i class="codicon codicon-file-symlink-file"></i> Create / Update .termprofile</button>
+            </div>
+          </div>
         </div>
       `;
     } else {
@@ -573,12 +583,18 @@
         <div class="list-footer">
           <button id="btn-new-profile"><i class="codicon codicon-add"></i> New Profile</button>
           <div class="list-footer-actions">
-            <button class="secondary icon-btn" id="btn-import-termprofile" title="Import from .termprofile file in workspace root">
-              <i class="codicon codicon-file-add"></i> Import From .termprofile
-            </button>
-            <button class="secondary icon-btn" id="btn-create-termprofile" title="Create .termprofile from current profiles">
-              <i class="codicon codicon-file-code"></i> Create .termprofile
-            </button>
+            <div class="split-btn-wrapper" id="termprofile-split-list">
+              <button class="secondary icon-btn split-btn-main" id="btn-import-termprofile" title="Import from .termprofile file in workspace root">
+                <i class="codicon codicon-file-code"></i> .termprofile
+              </button>
+              <button class="secondary split-btn-arrow" data-split="termprofile-split-list" title="More .termprofile actions">
+                <i class="codicon codicon-chevron-down"></i>
+              </button>
+              <div class="split-btn-dropdown">
+                <button class="split-btn-option" data-termprofile-action="import"><i class="codicon codicon-file-add"></i> Import from .termprofile</button>
+                <button class="split-btn-option" data-termprofile-action="create"><i class="codicon codicon-file-symlink-file"></i> Create / Update .termprofile</button>
+              </div>
+            </div>
             <button class="secondary icon-btn" id="btn-import" title="Import profiles from a JSON file">
               <i class="codicon codicon-cloud-download"></i> Import
             </button>
@@ -640,11 +656,44 @@
     document.getElementById('btn-import')?.addEventListener('click', () => {
       vscode.postMessage({ command: 'importProfiles' });
     });
-    document.getElementById('btn-import-termprofile')?.addEventListener('click', () => {
-      vscode.postMessage({ command: 'importFromTermprofile' });
+    // .termprofile split-button dropdowns (both empty-state and list footer)
+    document.querySelectorAll('.split-btn-arrow').forEach(arrow => {
+      arrow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wrapperId = arrow.getAttribute('data-split');
+        const wrapper = document.getElementById(wrapperId);
+        const dropdown = wrapper?.querySelector('.split-btn-dropdown');
+        if (!dropdown) { return; }
+        const isOpen = dropdown.classList.contains('open');
+        // close all first
+        document.querySelectorAll('.split-btn-dropdown.open').forEach(d => d.classList.remove('open'));
+        if (!isOpen) { dropdown.classList.add('open'); }
+      });
     });
-    document.getElementById('btn-create-termprofile')?.addEventListener('click', () => {
-      vscode.postMessage({ command: 'createTermprofile' });
+
+    document.querySelectorAll('[data-termprofile-action]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const action = btn.getAttribute('data-termprofile-action');
+        btn.closest('.split-btn-dropdown')?.classList.remove('open');
+        if (action === 'import') {
+          vscode.postMessage({ command: 'importFromTermprofile' });
+        } else if (action === 'create') {
+          vscode.postMessage({ command: 'createTermprofile' });
+        }
+      });
+    });
+
+    // Default action for the main .termprofile button = import
+    document.querySelectorAll('.split-btn-main#btn-import-termprofile').forEach(btn => {
+      btn.addEventListener('click', () => {
+        vscode.postMessage({ command: 'importFromTermprofile' });
+      });
+    });
+
+    // Close split-btn dropdowns when clicking outside
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.split-btn-dropdown.open').forEach(d => d.classList.remove('open'));
     });
 
     // Live drag-to-reorder via pointer events
@@ -835,10 +884,16 @@
         `<option value="${n}" ${count === n ? 'selected' : ''}>${n === 1 ? 'No split (single terminal)' : n + ' panels side-by-side'}</option>`
       ).join('');
 
+      const isCollapsed = collapsedGroups.has(gi);
       return `
-        <div class="group-section ${group.disabled ? 'group-disabled' : ''}" data-gi="${gi}">
+        <div class="group-section ${group.disabled ? 'group-disabled' : ''} ${isCollapsed ? 'group-collapsed' : ''}" data-gi="${gi}">
           <div class="group-header">
-            <h3>Group ${gi + 1}</h3>
+            <div class="group-header-left">
+              <button class="icon-only secondary group-collapse-btn" data-collapse-gi="${gi}" title="${isCollapsed ? 'Expand group' : 'Collapse group'}">
+                <i class="codicon codicon-chevron-${isCollapsed ? 'right' : 'down'}"></i>
+              </button>
+              <h3>Group ${gi + 1}</h3>
+            </div>
             <div class="group-header-actions">
               <label class="group-toggle-label" title="${group.disabled ? 'Enable this group' : 'Disable this group (skip on launch)'}">
                 <span class="group-toggle-text">${group.disabled ? 'Disabled' : 'Active'}</span>
@@ -852,11 +907,13 @@
           : ''}
             </div>
           </div>
-          <div class="form-group split-select-row">
-            <label>Terminal Layout</label>
-            <select data-field="group-split" data-gi="${gi}" ${group.disabled ? 'disabled' : ''}>${splitOptions}</select>
+          <div class="group-body" ${isCollapsed ? 'style="display:none"' : ''}>
+            <div class="form-group split-select-row">
+              <label>Terminal Layout</label>
+              <select data-field="group-split" data-gi="${gi}" ${group.disabled ? 'disabled' : ''}>${splitOptions}</select>
+            </div>
+            ${terminalsHtml}
           </div>
-          ${terminalsHtml}
         </div>
       `;
     }).join('');
@@ -1030,9 +1087,10 @@
       });
     });
 
-    // Close color picker dropdowns when clicking outside
+    // Close color picker and split-btn dropdowns when clicking outside
     document.addEventListener('click', () => {
       document.querySelectorAll('.color-picker-dropdown.open').forEach(d => d.classList.remove('open'));
+      document.querySelectorAll('.split-btn-dropdown.open').forEach(d => d.classList.remove('open'));
     });
 
     // Icon picker trigger buttons — open modal
@@ -1079,6 +1137,31 @@
         }
         group.terminals = group.terminals.slice(0, newCount);
         renderEditor();
+      });
+    });
+
+    // Group collapse/expand buttons
+    document.querySelectorAll('.group-collapse-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const gi = parseInt(btn.getAttribute('data-collapse-gi'));
+        const section = document.querySelector(`.group-section[data-gi="${gi}"]`);
+        const body = section?.querySelector('.group-body');
+        const icon = btn.querySelector('i.codicon');
+        if (!section || !body) { return; }
+
+        if (collapsedGroups.has(gi)) {
+          collapsedGroups.delete(gi);
+          body.style.display = '';
+          section.classList.remove('group-collapsed');
+          icon.className = 'codicon codicon-chevron-down';
+          btn.title = 'Collapse group';
+        } else {
+          collapsedGroups.add(gi);
+          body.style.display = 'none';
+          section.classList.add('group-collapsed');
+          icon.className = 'codicon codicon-chevron-right';
+          btn.title = 'Expand group';
+        }
       });
     });
 
@@ -1165,12 +1248,14 @@
         alert('Please add at least one terminal.');
         return;
       }
+      collapsedGroups = new Set();
       vscode.postMessage({ command: 'saveProfile', profile: editingProfile });
     });
 
     // Cancel
     document.getElementById('btn-cancel')?.addEventListener('click', () => {
       editingProfile = null;
+      collapsedGroups = new Set();
       renderProfileList();
     });
   }
