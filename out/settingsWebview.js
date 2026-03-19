@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SettingsWebview = void 0;
 const vscode = __importStar(require("vscode"));
 const path = __importStar(require("path"));
+const telemetry = __importStar(require("./telemetry"));
 class SettingsWebview {
     static refresh(profileManager) {
         if (SettingsWebview.currentPanel) {
@@ -75,15 +76,25 @@ class SettingsWebview {
                         profiles: this.profileManager.getAllProfiles(),
                     });
                     break;
-                case 'saveProfile':
+                case 'saveProfile': {
+                    const isNew = !this.profileManager.getProfile(message.profile.id);
                     await this.profileManager.saveProfile(message.profile);
+                    telemetry.sendEvent('profile.save', {
+                        is_new: isNew,
+                        group_count: message.profile.groups.length,
+                        terminal_count: message.profile.groups.reduce((s, g) => s + g.terminals.length, 0),
+                        has_auto_launch: !!message.profile.autoLaunch,
+                        has_close_on_relaunch: !!message.profile.closeOnRelaunch,
+                    });
                     this.panel.webview.postMessage({
                         command: 'profileSaved',
                         profile: message.profile,
                     });
                     break;
+                }
                 case 'deleteProfile':
                     await this.profileManager.deleteProfile(message.profileId);
+                    telemetry.sendEvent('profile.delete');
                     this.panel.webview.postMessage({
                         command: 'profilesLoaded',
                         profiles: this.profileManager.getAllProfiles(),
@@ -91,10 +102,12 @@ class SettingsWebview {
                     break;
                 case 'reorderProfiles':
                     await this.profileManager.reorderProfiles(message.ids);
+                    telemetry.sendEvent('profiles.reorder');
                     break;
                 case 'launchProfile': {
                     const profile = this.profileManager.getProfile(message.profileId);
                     if (profile) {
+                        telemetry.sendEvent('profile.launch', { source: 'webview' });
                         await this.terminalManager.launchProfile(profile);
                     }
                     break;
@@ -103,6 +116,7 @@ class SettingsWebview {
                     const profile = this.profileManager.getProfile(message.profileId);
                     if (profile) {
                         const issues = await this.terminalManager.checkProfileHealth(profile);
+                        telemetry.sendEvent('profile.healthCheck', { issue_count: issues.length });
                         this.panel.webview.postMessage({
                             command: 'healthResult',
                             profileId: message.profileId,

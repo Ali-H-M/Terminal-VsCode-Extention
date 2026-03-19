@@ -2,7 +2,7 @@
   "name": "terminal-profile-launcher",
   "displayName": "Terminal Profile Launcher",
   "description": "Launch multiple pre-configured terminal tabs with auto-run commands, split layouts, and saveable profiles",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "publisher": "Ali-H-M",
   "engines": {
     "vscode": "^1.85.0"
@@ -78,7 +78,60 @@
           "group": "navigation"
         }
       ]
-    }
+    },
+    "walkthroughs": [
+      {
+        "id": "terminal-profile-launcher.gettingStarted",
+        "title": "Get started with Terminal Profile Launcher",
+        "description": "Create and launch reusable terminal profiles — open multiple terminals with one click.",
+        "steps": [
+          {
+            "id": "openSettings",
+            "title": "Open the settings panel",
+            "description": "Open the Terminal Launcher settings to manage your profiles.\n\n[Open Settings](command:terminalLauncher.openSettings)",
+            "media": {
+              "markdown": "walkthrough/step1.md"
+            },
+            "completionEvents": [
+              "onCommand:terminalLauncher.openSettings"
+            ]
+          },
+          {
+            "id": "createProfile",
+            "title": "Create your first profile",
+            "description": "A profile is a saved set of terminals. Click **New Profile** in the settings panel, give it a name, and add your commands.\n\n[Open Settings](command:terminalLauncher.openSettings)",
+            "media": {
+              "markdown": "walkthrough/step2.md"
+            },
+            "completionEvents": [
+              "onCommand:terminalLauncher.openSettings"
+            ]
+          },
+          {
+            "id": "quickLaunch",
+            "title": "Launch with Quick Launch",
+            "description": "Press the **Launch Terminal** button in the status bar, or run **Terminal Launcher: Quick Launch** from the Command Palette to open any profile instantly.\n\n[Quick Launch](command:terminalLauncher.quickLaunch)",
+            "media": {
+              "markdown": "walkthrough/step3.md"
+            },
+            "completionEvents": [
+              "onCommand:terminalLauncher.quickLaunch"
+            ]
+          },
+          {
+            "id": "termprofile",
+            "title": "Share profiles with your team",
+            "description": "Create a **.termprofile** file in your repo root so teammates get the same terminal setup when they clone the project.\n\n[Create .termprofile](command:terminalLauncher.createTermprofile)",
+            "media": {
+              "markdown": "walkthrough/step4.md"
+            },
+            "completionEvents": [
+              "onCommand:terminalLauncher.createTermprofile"
+            ]
+          }
+        ]
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

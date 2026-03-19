@@ -4,6 +4,7 @@ import { ProfileManager } from './profileManager';
 import { TerminalManager } from './terminalManager';
 import { SettingsWebview } from './settingsWebview';
 import { TermprofileWatcher } from './termprofileWatcher';
+import * as telemetry from './telemetry';
 
 export function activate(context: vscode.ExtensionContext) {
   const profileManager = new ProfileManager(context.globalState);
@@ -20,15 +21,20 @@ export function activate(context: vscode.ExtensionContext) {
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
 
+  telemetry.init(context);
+  context.subscriptions.push({ dispose: telemetry.dispose });
+
   // Auto-launch profiles marked for auto-launch on workspace open
   const autoLaunchProfiles = profileManager.getAllProfiles().filter(p => p.autoLaunch);
   for (const profile of autoLaunchProfiles) {
     terminalManager.launchProfile(profile);
+    telemetry.sendEvent('profile.autoLaunch');
   }
 
   // Open the settings webview
   context.subscriptions.push(
     vscode.commands.registerCommand('terminalLauncher.openSettings', () => {
+      telemetry.sendEvent('command.openSettings');
       SettingsWebview.createOrShow(context, profileManager, terminalManager);
     })
   );
@@ -69,6 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (picked) {
         const profile = profileManager.getProfile(picked.id);
         if (profile) {
+          telemetry.sendEvent('profile.launch', { source: 'quickLaunch' });
           await terminalManager.launchProfile(profile);
         }
       }
@@ -87,6 +94,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage(`Profile not found: ${profileId}`);
         return;
       }
+      telemetry.sendEvent('profile.launch', { source: 'direct' });
       await terminalManager.launchProfile(profile);
     })
   );
@@ -106,6 +114,7 @@ export function activate(context: vscode.ExtensionContext) {
       });
       if (!uri) { return; }
       await fs.writeFile(uri.fsPath, JSON.stringify(profiles, null, 2), 'utf8');
+      telemetry.sendEvent('profiles.export', { count: profiles.length });
       vscode.window.showInformationMessage(`Exported ${profiles.length} profile(s) to ${uri.fsPath}`);
     })
   );
@@ -125,6 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
         imported = JSON.parse(raw);
         if (!Array.isArray(imported)) { throw new Error('File must contain a JSON array of profiles.'); }
       } catch (err) {
+        telemetry.sendEvent('error', { command: 'importProfiles', message: err instanceof Error ? err.message : String(err) });
         vscode.window.showErrorMessage(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
         return;
       }
@@ -152,6 +162,7 @@ export function activate(context: vscode.ExtensionContext) {
           count++;
         }
       }
+      telemetry.sendEvent('profiles.import', { count, strategy: choice });
       vscode.window.showInformationMessage(`Imported ${count} profile(s).`);
     })
   );
@@ -178,6 +189,7 @@ export function activate(context: vscode.ExtensionContext) {
       const strategy = strategyChoice === 'Replace all existing profiles' ? 'replace' : 'merge';
       const count = await termprofileWatcher.importFromFile(files[0], strategy);
       if (count > 0) {
+        telemetry.sendEvent('termprofile.import', { count, strategy });
         vscode.window.showInformationMessage(`Imported ${count} profile(s) from .termprofile.`);
         // Refresh the webview if it's open
         SettingsWebview.refresh(profileManager);
@@ -224,6 +236,7 @@ export function activate(context: vscode.ExtensionContext) {
       const uri = vscode.Uri.joinPath(folder.uri, '.termprofile');
 
       await vscode.workspace.fs.writeFile(uri, Buffer.from(fileContent, 'utf8'));
+      telemetry.sendEvent('termprofile.create', { count: selected.length });
 
       const open = await vscode.window.showInformationMessage(
         `.termprofile created with ${selected.length} profile(s). Add it to version control so your team can use it.`,

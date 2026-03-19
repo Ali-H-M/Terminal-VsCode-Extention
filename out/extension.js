@@ -1,22 +1,22 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function (o, m, k, k2) {
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function () { return m[k]; } };
+      desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
-}) : (function (o, m, k, k2) {
+}) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function (o, v) {
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function (o, v) {
+}) : function(o, v) {
     o["default"] = v;
 });
 var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function (o) {
+    var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function (o) {
             var ar = [];
             for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
@@ -41,6 +41,7 @@ const profileManager_1 = require("./profileManager");
 const terminalManager_1 = require("./terminalManager");
 const settingsWebview_1 = require("./settingsWebview");
 const termprofileWatcher_1 = require("./termprofileWatcher");
+const telemetry = __importStar(require("./telemetry"));
 function activate(context) {
     const profileManager = new profileManager_1.ProfileManager(context.globalState);
     const terminalManager = new terminalManager_1.TerminalManager();
@@ -53,13 +54,17 @@ function activate(context) {
     statusBarItem.command = 'terminalLauncher.quickLaunch';
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
+    telemetry.init(context);
+    context.subscriptions.push({ dispose: telemetry.dispose });
     // Auto-launch profiles marked for auto-launch on workspace open
     const autoLaunchProfiles = profileManager.getAllProfiles().filter(p => p.autoLaunch);
     for (const profile of autoLaunchProfiles) {
         terminalManager.launchProfile(profile);
+        telemetry.sendEvent('profile.autoLaunch');
     }
     // Open the settings webview
     context.subscriptions.push(vscode.commands.registerCommand('terminalLauncher.openSettings', () => {
+        telemetry.sendEvent('command.openSettings');
         settingsWebview_1.SettingsWebview.createOrShow(context, profileManager, terminalManager);
     }));
     // Quick pick to select and launch a profile
@@ -89,6 +94,7 @@ function activate(context) {
         if (picked) {
             const profile = profileManager.getProfile(picked.id);
             if (profile) {
+                telemetry.sendEvent('profile.launch', { source: 'quickLaunch' });
                 await terminalManager.launchProfile(profile);
             }
         }
@@ -104,6 +110,7 @@ function activate(context) {
             vscode.window.showErrorMessage(`Profile not found: ${profileId}`);
             return;
         }
+        telemetry.sendEvent('profile.launch', { source: 'direct' });
         await terminalManager.launchProfile(profile);
     }));
     // Export profiles to a JSON file
@@ -122,6 +129,7 @@ function activate(context) {
             return;
         }
         await fs.writeFile(uri.fsPath, JSON.stringify(profiles, null, 2), 'utf8');
+        telemetry.sendEvent('profiles.export', { count: profiles.length });
         vscode.window.showInformationMessage(`Exported ${profiles.length} profile(s) to ${uri.fsPath}`);
     }));
     // Import profiles from a JSON file
@@ -143,6 +151,7 @@ function activate(context) {
             }
         }
         catch (err) {
+            telemetry.sendEvent('error', { command: 'importProfiles', message: err instanceof Error ? err.message : String(err) });
             vscode.window.showErrorMessage(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
             return;
         }
@@ -170,6 +179,7 @@ function activate(context) {
                 count++;
             }
         }
+        telemetry.sendEvent('profiles.import', { count, strategy: choice });
         vscode.window.showInformationMessage(`Imported ${count} profile(s).`);
     }));
     // Import profiles from .termprofile file in workspace root
@@ -189,6 +199,7 @@ function activate(context) {
         const strategy = strategyChoice === 'Replace all existing profiles' ? 'replace' : 'merge';
         const count = await termprofileWatcher.importFromFile(files[0], strategy);
         if (count > 0) {
+            telemetry.sendEvent('termprofile.import', { count, strategy });
             vscode.window.showInformationMessage(`Imported ${count} profile(s) from .termprofile.`);
             // Refresh the webview if it's open
             settingsWebview_1.SettingsWebview.refresh(profileManager);
@@ -225,6 +236,7 @@ function activate(context) {
         const fileContent = JSON.stringify({ version: 1, profiles: exportable }, null, 2);
         const uri = vscode.Uri.joinPath(folder.uri, '.termprofile');
         await vscode.workspace.fs.writeFile(uri, Buffer.from(fileContent, 'utf8'));
+        telemetry.sendEvent('termprofile.create', { count: selected.length });
         const open = await vscode.window.showInformationMessage(`.termprofile created with ${selected.length} profile(s). Add it to version control so your team can use it.`, 'Open File');
         if (open === 'Open File') {
             await vscode.window.showTextDocument(uri);

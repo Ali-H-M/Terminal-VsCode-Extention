@@ -1,6 +1,8 @@
 /node_modules
 node_modules
 *.vsix
+src/secrets.ts
+.env
 
 /webview/setting-v2.css
 /webview/settings-v3.css
