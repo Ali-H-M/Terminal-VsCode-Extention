@@ -213,7 +213,7 @@ function activate(context) {
             picked: true, // default: all selected
             id: p.id,
         })), {
-            placeHolder: 'Select profiles to include in .termprofile',
+            placeHolder: 'Select profiles to include in .termprofile (space to toggle)',
             canPickMany: true,
         });
         if (!picks || picks.length === 0) {
