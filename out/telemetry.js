@@ -40,9 +40,7 @@ const vscode = __importStar(require("vscode"));
 const secrets_1 = require("./secrets");
 // Stable anonymous ID persisted per install in globalState
 let _distinctId;
-let _context;
 function init(context) {
-    _context = context;
     const stored = context.globalState.get('terminalLauncher.telemetryId');
     if (stored) {
         _distinctId = stored;
@@ -53,6 +51,9 @@ function init(context) {
     }
 }
 function sendEvent(event, properties) {
+    if (!secrets_1.TELEMETRY_ENABLED) {
+        return;
+    }
     if (!vscode.env.isTelemetryEnabled) {
         return;
     }
@@ -85,7 +86,6 @@ function sendEvent(event, properties) {
     }).catch(() => { });
 }
 function dispose() {
-    _context = undefined;
     _distinctId = undefined;
 }
 //# sourceMappingURL=telemetry.js.map

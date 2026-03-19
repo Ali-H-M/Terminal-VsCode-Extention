@@ -1,12 +1,10 @@
 import * as vscode from 'vscode';
-import { POSTHOG_API_KEY, POSTHOG_HOST } from './secrets';
+import { POSTHOG_API_KEY, POSTHOG_HOST, TELEMETRY_ENABLED } from './secrets';
 
 // Stable anonymous ID persisted per install in globalState
 let _distinctId: string | undefined;
-let _context: vscode.ExtensionContext | undefined;
 
 export function init(context: vscode.ExtensionContext): void {
-  _context = context;
   const stored = context.globalState.get<string>('terminalLauncher.telemetryId');
   if (stored) {
     _distinctId = stored;
@@ -17,6 +15,7 @@ export function init(context: vscode.ExtensionContext): void {
 }
 
 export function sendEvent(event: string, properties?: Record<string, string | number | boolean>): void {
+  if (!TELEMETRY_ENABLED) { return; }
   if (!vscode.env.isTelemetryEnabled) { return; }
   if (!_distinctId) { return; }
 
@@ -48,6 +47,5 @@ export function sendEvent(event: string, properties?: Record<string, string | nu
 }
 
 export function dispose(): void {
-  _context = undefined;
   _distinctId = undefined;
 }
