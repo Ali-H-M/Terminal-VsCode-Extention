@@ -2,6 +2,8 @@
 node_modules
 *.vsix
 src/secrets.ts
+out/secrets.js
+out/secrets.js.map
 .env
 
 /webview/setting-v2.css
