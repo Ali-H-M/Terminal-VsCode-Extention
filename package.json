@@ -2,7 +2,7 @@
   "name": "terminal-profile-launcher",
   "displayName": "Terminal Profile Launcher",
   "description": "Launch multiple pre-configured terminal tabs with auto-run commands, split layouts, and saveable profiles",
-  "version": "1.5.1",
+  "version": "1.5.3",
   "publisher": "Ali-H-M",
   "engines": {
     "vscode": "^1.85.0"
@@ -78,6 +78,17 @@
           "group": "navigation"
         }
       ]
+    },
+    "configuration": {
+      "title": "Terminal Profile Launcher",
+      "properties": {
+        "terminalLauncher.telemetry.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Send anonymous usage data to help improve the extension. Always respects VS Code's global `#telemetry.telemetryLevel#` setting — disabling global telemetry takes priority.",
+          "tags": ["telemetry", "usesOnlineServices"]
+        }
+      }
     },
     "walkthroughs": [
       {

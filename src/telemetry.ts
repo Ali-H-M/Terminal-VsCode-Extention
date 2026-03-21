@@ -17,6 +17,8 @@ export function init(context: vscode.ExtensionContext): void {
 export function sendEvent(event: string, properties?: Record<string, string | number | boolean>): void {
   if (!TELEMETRY_ENABLED) { return; }
   if (!vscode.env.isTelemetryEnabled) { return; }
+  const extTelemetryEnabled = vscode.workspace.getConfiguration('terminalLauncher').get<boolean>('telemetry.enabled', true);
+  if (!extTelemetryEnabled) { return; }
   if (!_distinctId) { return; }
 
   const body = JSON.stringify({

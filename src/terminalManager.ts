@@ -66,12 +66,23 @@ export class TerminalManager {
     return result;
   }
 
+  private resolveCwd(raw: string | undefined): string | undefined {
+    const trimmed = raw?.trim();
+    if (!trimmed) { return undefined; }
+    const nodePath = require('path') as typeof import('path');
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+    if (workspaceRoot && !nodePath.isAbsolute(trimmed)) {
+      return nodePath.join(workspaceRoot, trimmed);
+    }
+    return trimmed;
+  }
+
   private createTerminal(config: TerminalConfig): vscode.Terminal {
     const options: vscode.TerminalOptions = {
       name: config.name || 'Terminal',
       iconPath: config.icon ? new vscode.ThemeIcon(config.icon) : undefined,
       color: config.color ? new vscode.ThemeColor(config.color) : undefined,
-      cwd: config.cwd?.trim() || undefined,
+      cwd: this.resolveCwd(config.cwd),
     };
     return vscode.window.createTerminal(options);
   }
@@ -91,7 +102,7 @@ export class TerminalManager {
         name: config.name || 'Terminal',
         icon: config.icon ? { id: config.icon } : undefined,
         color: config.color || undefined,
-        cwd: config.cwd?.trim() || undefined,
+        cwd: this.resolveCwd(config.cwd),
       },
       location: { splitActiveTerminal: true },
     });
