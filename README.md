@@ -4,6 +4,10 @@
 
 Save and launch sets of pre-configured terminals with a single command. Open multiple tabs, split panels, auto-run commands, and keep everything organized with named profiles.
 
+## Demo
+
+![Demo](demo.gif)
+
 ## Features
 
 - **Multiple terminals** — open several terminal tabs at once
@@ -82,4 +86,4 @@ Add a `.vscode/extensions.json` file to your repo so VS Code suggests installing
 
 ### Found a bug or have a suggestion?
 
-Please [open a GitHub issue](https://github.com/your-repo/issues) or email [alixxgam@gmail.com](mailto:alixxgam@gmail.com).
+Please [open a GitHub issue](https://github.com/Ali-H-M/Terminal-VsCode-Extention) or email [alixxgam@gmail.com](mailto:alixxgam@gmail.com).
