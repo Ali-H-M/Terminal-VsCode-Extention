@@ -6,7 +6,7 @@ Save and launch sets of pre-configured terminals with a single command. Open mul
 
 ## Demo
 
-![Demo](demo.gif)
+![Demo](Demo.gif)
 
 ## Features
 
