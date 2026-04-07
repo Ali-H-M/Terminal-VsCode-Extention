@@ -6,6 +6,14 @@ import { SettingsWebview } from './settingsWebview';
 import { TermprofileWatcher } from './termprofileWatcher';
 import * as telemetry from './telemetry';
 
+function isValidProfileShape(p: any): boolean {
+  if (!p || typeof p.name !== 'string' || !Array.isArray(p.groups)) { return false; }
+  return p.groups.every((g: any) =>
+    g && Array.isArray(g.terminals) &&
+    g.terminals.every((t: any) => t && Array.isArray(t.commands))
+  );
+}
+
 export function activate(context: vscode.ExtensionContext) {
   const profileManager = new ProfileManager(context.globalState);
   const terminalManager = new TerminalManager();
@@ -24,12 +32,14 @@ export function activate(context: vscode.ExtensionContext) {
   telemetry.init(context);
   context.subscriptions.push({ dispose: telemetry.dispose });
 
-  // Auto-launch profiles marked for auto-launch on workspace open
+  // Auto-launch profiles marked for auto-launch on workspace open (sequential, awaited)
   const autoLaunchProfiles = profileManager.getAllProfiles().filter(p => p.autoLaunch);
-  for (const profile of autoLaunchProfiles) {
-    terminalManager.launchProfile(profile);
-    telemetry.sendEvent('profile.autoLaunch');
-  }
+  (async () => {
+    for (const profile of autoLaunchProfiles) {
+      await terminalManager.launchProfile(profile);
+      telemetry.sendEvent('profile.autoLaunch');
+    }
+  })();
 
   // Open the settings webview
   context.subscriptions.push(
@@ -154,13 +164,12 @@ export function activate(context: vscode.ExtensionContext) {
 
       let count = 0;
       for (const p of imported) {
-        if (p && typeof p.name === 'string' && Array.isArray(p.groups)) {
-          if (choice === 'Merge with existing profiles') {
-            p.id = Date.now().toString(36) + Math.random().toString(36).substring(2, 11);
-          }
-          await profileManager.saveProfile(p);
-          count++;
+        if (!isValidProfileShape(p)) { continue; }
+        if (choice === 'Merge with existing profiles') {
+          p.id = Date.now().toString(36) + Math.random().toString(36).substring(2, 11);
         }
+        await profileManager.saveProfile(p);
+        count++;
       }
       telemetry.sendEvent('profiles.import', { count, strategy: choice });
       vscode.window.showInformationMessage(`Imported ${count} profile(s).`);

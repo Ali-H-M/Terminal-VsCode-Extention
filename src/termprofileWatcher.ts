@@ -72,8 +72,15 @@ export class TermprofileWatcher {
     }
 
     const valid = (file.profiles as unknown[]).filter(
-      (p): p is Omit<Profile, 'id'> =>
-        typeof (p as any)?.name === 'string' && Array.isArray((p as any)?.groups)
+      (p): p is Omit<Profile, 'id'> => {
+        const pr = p as any;
+        return typeof pr?.name === 'string' &&
+          Array.isArray(pr?.groups) &&
+          pr.groups.every((g: any) =>
+            g && Array.isArray(g.terminals) &&
+            g.terminals.every((t: any) => t && Array.isArray(t.commands))
+          );
+      }
     );
 
     return { profiles: valid };

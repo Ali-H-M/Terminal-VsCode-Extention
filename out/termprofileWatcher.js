@@ -92,7 +92,13 @@ class TermprofileWatcher {
         if (!Array.isArray(file.profiles)) {
             return { profiles: [], error: 'File must have a "profiles" array.' };
         }
-        const valid = file.profiles.filter((p) => typeof p?.name === 'string' && Array.isArray(p?.groups));
+        const valid = file.profiles.filter((p) => {
+            const pr = p;
+            return typeof pr?.name === 'string' &&
+                Array.isArray(pr?.groups) &&
+                pr.groups.every((g) => g && Array.isArray(g.terminals) &&
+                    g.terminals.every((t) => t && Array.isArray(t.commands)));
+        });
         return { profiles: valid };
     }
 }

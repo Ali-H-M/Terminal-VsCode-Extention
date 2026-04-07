@@ -58,7 +58,7 @@ Quick Launch can be assign to Keyboard Shortcut:
 
 ### Profile Manager
 
-![Terminal Launcher](Terminal-LauncherV1.5.png)
+![Terminal Launcher](Terminal-LauncherV1.5.5.png)
 
 ### Running Terminals
 

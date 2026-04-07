@@ -570,6 +570,9 @@
                    </button>
                    <button data-action="launch" data-id="${p.id}">Launch</button>
                    <button class="secondary" data-action="edit" data-id="${p.id}">Edit</button>
+                   <button class="secondary icon-only" data-action="duplicate" data-id="${p.id}" title="Duplicate profile">
+                     <i class="codicon codicon-copy"></i>
+                   </button>
                    <button class="secondary danger" data-action="delete" data-id="${p.id}">Delete</button>
                  </div>`
           }
@@ -627,6 +630,16 @@
           if (profile) {
             profile.pinned = !profile.pinned;
             vscode.postMessage({ command: 'saveProfile', profile });
+          }
+        } else if (action === 'duplicate') {
+          const original = profiles.find(p => p.id === id);
+          if (original) {
+            const copy = JSON.parse(JSON.stringify(original));
+            copy.id = generateId();
+            copy.name = 'Copy of ' + original.name;
+            copy.pinned = false;
+            copy.autoLaunch = false;
+            vscode.postMessage({ command: 'saveProfile', profile: copy });
           }
         } else if (action === 'edit') {
           editingProfile = JSON.parse(JSON.stringify(profiles.find(p => p.id === id)));
@@ -1201,6 +1214,13 @@
       btn.addEventListener('click', (e) => {
         const gi = parseInt(e.currentTarget.getAttribute('data-remove-group'));
         editingProfile.groups.splice(gi, 1);
+        // Shift collapsed indices: remove gi, decrement anything above it
+        const updated = new Set();
+        for (const idx of collapsedGroups) {
+          if (idx < gi) updated.add(idx);
+          else if (idx > gi) updated.add(idx - 1);
+        }
+        collapsedGroups = updated;
         renderEditor();
       });
     });

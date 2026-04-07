@@ -2,7 +2,7 @@
   "name": "terminal-profile-launcher",
   "displayName": "Terminal Profile Launcher",
   "description": "Launch multiple pre-configured terminal tabs with auto-run commands, split layouts, and saveable profiles",
-  "version": "1.5.3",
+  "version": "1.5.5",
   "publisher": "Ali-H-M",
   "engines": {
     "vscode": "^1.85.0"
@@ -12,8 +12,7 @@
     "url": "https://github.com/Ali-H-M/Terminal-VsCode-Extention.git"
   },
   "categories": [
-    "Other",
-    "Snippets"
+    "Other"
   ],
   "keywords": [
     "terminal",
@@ -24,13 +23,21 @@
     "workspace",
     "multi-terminal",
     "termprofile",
-    "team"
+    "team",
+    "terminal-automation",
+    "workspace-terminal",
+    "productivity",
+    "workflow-automation",
+    "devtools",
+    "developer-tools",
+    "multi-terminal"
   ],
   "sponsor": {
     "url": "https://github.com/sponsors/Ali-H-M"
   },
   "icon": "logo.ico",
   "activationEvents": [
+    "onStartupFinished",
     "workspaceContains:.termprofile"
   ],
   "main": "./out/extension.js",
@@ -58,11 +65,6 @@
         "title": "Terminal Launcher: Import Profiles"
       },
       {
-        "command": "terminalLauncher.saveCurrentTerminals",
-        "title": "Save Current Terminals as Profile",
-        "icon": "$(save)"
-      },
-      {
         "command": "terminalLauncher.importFromTermprofile",
         "title": "Terminal Launcher: Import from .termprofile"
       },
@@ -71,14 +73,7 @@
         "title": "Terminal Launcher: Create .termprofile for Workspace"
       }
     ],
-    "menus": {
-      "terminal/title/context": [
-        {
-          "command": "terminalLauncher.saveCurrentTerminals",
-          "group": "navigation"
-        }
-      ]
-    },
+    "menus": {},
     "configuration": {
       "title": "Terminal Profile Launcher",
       "properties": {
