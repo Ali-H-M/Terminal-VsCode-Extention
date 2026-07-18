@@ -6,6 +6,7 @@
   let editingProfile = null; // null = list view, object = editing
   let pendingDeleteId = null; // track delete confirmation
   let collapsedGroups = new Set(); // set of gi indices that are collapsed
+  let workspaceInfo = { workspacePath: undefined, workspaceName: undefined, branch: undefined };
 
   // All codicon icon IDs (same as VSCode's "Change Icon" picker)
   const ALL_ICONS = [
@@ -450,6 +451,7 @@
   // Request profiles on load
   window.addEventListener('DOMContentLoaded', () => {
     vscode.postMessage({ command: 'getProfiles' });
+    vscode.postMessage({ command: 'getWorkspaceInfo' });
   });
 
   // Handle messages from extension
@@ -465,6 +467,14 @@
       case 'profileSaved':
         editingProfile = null;
         vscode.postMessage({ command: 'getProfiles' });
+        break;
+      case 'workspaceInfo':
+        workspaceInfo = {
+          workspacePath: message.workspacePath,
+          workspaceName: message.workspaceName,
+          branch: message.branch,
+        };
+        if (!editingProfile) { renderProfileList(); }
         break;
       case 'healthResult': {
         const { profileId, issues } = message;
@@ -545,9 +555,18 @@
         const terminalCount = p.groups.reduce((sum, g) => sum + g.terminals.length, 0);
         const groupCount = p.groups.length;
         const isDeleting = pendingDeleteId === p.id;
+        const isScopedAutoLaunch = (p.autoLaunchWorkspaces || []).length > 0;
+        const branchGateActive = p.autoLaunch && !!p.branchPattern;
+        const branchGateMatches = branchGateActive && workspaceInfo.branch &&
+          matchesBranchPatternClient(workspaceInfo.branch, p.branchPattern);
+        const autoLaunchTitle = [
+          isScopedAutoLaunch ? 'Auto-launches in selected workspace(s)' : 'Auto-launches in every workspace',
+          branchGateActive ? `only on branch "${p.branchPattern}"` : '',
+        ].filter(Boolean).join(', ');
         const badges = [
           p.pinned ? `<span class="profile-badge badge-pin" title="Pinned"><i class="codicon codicon-pinned"></i></span>` : '',
-          p.autoLaunch ? `<span class="profile-badge badge-auto" title="Auto-launches on workspace open"><i class="codicon codicon-rocket"></i></span>` : '',
+          p.autoLaunch ? `<span class="profile-badge badge-auto" title="${escapeHtml(autoLaunchTitle)}"><i class="codicon codicon-rocket"></i></span>` : '',
+          branchGateActive ? `<span class="profile-badge ${branchGateMatches ? 'badge-branch' : 'badge-branch-inactive'}" title="${branchGateMatches ? `Current branch matches "${escapeHtml(p.branchPattern)}" — will auto-launch` : `Auto-launch requires branch "${escapeHtml(p.branchPattern)}"${workspaceInfo.branch ? ` (current: ${escapeHtml(workspaceInfo.branch)})` : ''}`}"><i class="codicon codicon-git-branch"></i></span>` : '',
         ].join('');
         return `
           <div class="profile-card ${isDeleting ? 'profile-card-deleting' : ''} ${p.pinned ? 'profile-card-pinned' : ''}" data-id="${p.id}">
@@ -954,6 +973,25 @@
             <div class="toggle-card-text">
               <span class="toggle-card-title"><i class="codicon codicon-rocket"></i> Auto-Launch</span>
               <span class="toggle-card-desc">Launch this profile automatically when this workspace opens</span>
+              ${p.autoLaunch && workspaceInfo.workspacePath ? `
+                <div class="auto-launch-scope-row">
+                  <label class="toggle-switch toggle-switch-sm">
+                    <input type="checkbox" id="auto-launch-this-workspace-only"
+                           ${(p.autoLaunchWorkspaces || []).includes(workspaceInfo.workspacePath) ? 'checked' : ''} />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="auto-launch-scope-text">
+                    Only auto-launch in <span class="auto-launch-scope-workspace">${escapeHtml(workspaceInfo.workspaceName || 'this workspace')}</span>
+                  </span>
+                </div>
+              ` : ''}
+              ${p.autoLaunch ? `
+                <div class="auto-launch-scope-row auto-launch-branch-row">
+                  <span class="auto-launch-scope-text">Only auto-launch on branch</span>
+                  <input type="text" id="branch-pattern" value="${escapeHtml(p.branchPattern || '')}" placeholder="any branch" />
+                </div>
+                <span class="field-hint">Exact name (e.g. "develop") matches only that branch; use * as a wildcard (e.g. "feature/*") to match a family of branches. Leave empty to auto-launch regardless of branch.${workspaceInfo.branch ? ` Current branch: <strong>${escapeHtml(workspaceInfo.branch)}</strong>` : ''}</span>
+              ` : ''}
             </div>
             <label class="toggle-switch">
               <input type="checkbox" id="auto-launch" ${p.autoLaunch ? 'checked' : ''} />
@@ -1235,8 +1273,26 @@
     // Auto-launch toggle
     document.getElementById('auto-launch')?.addEventListener('change', (e) => {
       editingProfile.autoLaunch = e.target.checked;
-      const card = e.target.closest('.toggle-card');
-      if (card) card.classList.toggle('toggle-card-on', e.target.checked);
+      // Re-render so the "this workspace only" sub-option appears/disappears
+      renderEditor();
+    });
+
+    // Auto-launch scope: restrict to current workspace only
+    document.getElementById('auto-launch-this-workspace-only')?.addEventListener('change', (e) => {
+      const ws = workspaceInfo.workspacePath;
+      if (!ws) { return; }
+      const existing = new Set(editingProfile.autoLaunchWorkspaces || []);
+      if (e.target.checked) {
+        existing.add(ws);
+      } else {
+        existing.delete(ws);
+      }
+      editingProfile.autoLaunchWorkspaces = [...existing];
+    });
+
+    // Branch pattern
+    document.getElementById('branch-pattern')?.addEventListener('input', (e) => {
+      editingProfile.branchPattern = e.target.value;
     });
 
     // Clear validation on name input
@@ -1278,6 +1334,13 @@
       collapsedGroups = new Set();
       renderProfileList();
     });
+  }
+
+  function matchesBranchPatternClient(branch, pattern) {
+    const trimmed = (pattern || '').trim();
+    if (!trimmed || !branch) return false;
+    const escaped = trimmed.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+    return new RegExp(`^${escaped}$`).test(branch);
   }
 
   function escapeHtml(str) {

@@ -5,6 +5,7 @@ import { TerminalManager } from './terminalManager';
 import { SettingsWebview } from './settingsWebview';
 import { TermprofileWatcher } from './termprofileWatcher';
 import * as telemetry from './telemetry';
+import { getCurrentBranch, matchesBranchPattern } from './gitInfo';
 
 function isValidProfileShape(p: any): boolean {
   if (!p || typeof p.name !== 'string' || !Array.isArray(p.groups)) { return false; }
@@ -32,9 +33,27 @@ export function activate(context: vscode.ExtensionContext) {
   telemetry.init(context);
   context.subscriptions.push({ dispose: telemetry.dispose });
 
-  // Auto-launch profiles marked for auto-launch on workspace open (sequential, awaited)
-  const autoLaunchProfiles = profileManager.getAllProfiles().filter(p => p.autoLaunch);
+  // Auto-launch profiles marked for auto-launch on workspace open (sequential, awaited).
+  // Profiles with a non-empty autoLaunchWorkspaces list only fire in a matching workspace;
+  // profiles without one (including all pre-existing profiles) keep firing everywhere,
+  // preserving behavior for users who already rely on it.
+  // Profiles with a branchPattern additionally only fire when the current branch matches.
+  const currentWorkspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   (async () => {
+    const allProfiles = profileManager.getAllProfiles();
+    const candidates = allProfiles.filter(p => {
+      if (!p.autoLaunch) { return false; }
+      if (!p.autoLaunchWorkspaces || p.autoLaunchWorkspaces.length === 0) { return true; }
+      return !!currentWorkspacePath && p.autoLaunchWorkspaces.includes(currentWorkspacePath);
+    });
+    if (candidates.length === 0) { return; }
+
+    const currentBranch = candidates.some(p => p.branchPattern) ? await getCurrentBranch() : undefined;
+    const autoLaunchProfiles = candidates.filter(p => {
+      if (!p.branchPattern) { return true; }
+      return !!currentBranch && matchesBranchPattern(currentBranch, p.branchPattern);
+    });
+
     for (const profile of autoLaunchProfiles) {
       await terminalManager.launchProfile(profile);
       telemetry.sendEvent('profile.autoLaunch');

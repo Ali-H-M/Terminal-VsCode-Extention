@@ -22,6 +22,12 @@ export interface Profile {
   closeOnRelaunch?: boolean; // close previously launched terminals from this profile before relaunching
   pinned?: boolean;          // pinned profiles appear at the top of the list and Quick Launch
   autoLaunch?: boolean;      // auto-launch this profile when the workspace opens
+  // If set (non-empty), autoLaunch only fires when the opened workspace's fsPath is in this list.
+  // Absent/empty = fire in every workspace
+  autoLaunchWorkspaces?: string[];
+  // Optional glob-like pattern (e.g. "feature/*", "develop") matched against the current git branch.
+  // If set, autoLaunch only fires when the checked-out branch matches this pattern.
+  branchPattern?: string;
 }
 
 /** Format of a .termprofile file at repo root */
@@ -34,6 +40,8 @@ export interface TermprofileFile {
 /** Messages sent between extension and webview */
 export type WebviewMessage =
   | { command: 'getProfiles' }
+  | { command: 'getWorkspaceInfo' }
+  | { command: 'workspaceInfo'; workspacePath?: string; workspaceName?: string; branch?: string }
   | { command: 'saveProfile'; profile: Profile }
   | { command: 'deleteProfile'; profileId: string }
   | { command: 'launchProfile'; profileId: string }

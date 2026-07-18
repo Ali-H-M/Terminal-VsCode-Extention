@@ -37,6 +37,7 @@ exports.SettingsWebview = void 0;
 const vscode = __importStar(require("vscode"));
 const path = __importStar(require("path"));
 const telemetry = __importStar(require("./telemetry"));
+const gitInfo_1 = require("./gitInfo");
 class SettingsWebview {
     static refresh(profileManager) {
         if (SettingsWebview.currentPanel) {
@@ -76,6 +77,17 @@ class SettingsWebview {
                         profiles: this.profileManager.getAllProfiles(),
                     });
                     break;
+                case 'getWorkspaceInfo': {
+                    const folder = vscode.workspace.workspaceFolders?.[0];
+                    const branch = await (0, gitInfo_1.getCurrentBranch)();
+                    this.panel.webview.postMessage({
+                        command: 'workspaceInfo',
+                        workspacePath: folder?.uri.fsPath,
+                        workspaceName: folder?.name,
+                        branch,
+                    });
+                    break;
+                }
                 case 'saveProfile': {
                     const isNew = !this.profileManager.getProfile(message.profile.id);
                     await this.profileManager.saveProfile(message.profile);

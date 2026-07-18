@@ -42,6 +42,7 @@ const terminalManager_1 = require("./terminalManager");
 const settingsWebview_1 = require("./settingsWebview");
 const termprofileWatcher_1 = require("./termprofileWatcher");
 const telemetry = __importStar(require("./telemetry"));
+const gitInfo_1 = require("./gitInfo");
 function isValidProfileShape(p) {
     if (!p || typeof p.name !== 'string' || !Array.isArray(p.groups)) {
         return false;
@@ -63,9 +64,32 @@ function activate(context) {
     context.subscriptions.push(statusBarItem);
     telemetry.init(context);
     context.subscriptions.push({ dispose: telemetry.dispose });
-    // Auto-launch profiles marked for auto-launch on workspace open (sequential, awaited)
-    const autoLaunchProfiles = profileManager.getAllProfiles().filter(p => p.autoLaunch);
+    // Auto-launch profiles marked for auto-launch on workspace open (sequential, awaited).
+    // Profiles with a non-empty autoLaunchWorkspaces list only fire in a matching workspace;
+    // profiles without one (including all pre-existing profiles) keep firing everywhere,
+    // Profiles with a branchPattern additionally only fire when the current branch matches.
+    const currentWorkspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     (async () => {
+        const allProfiles = profileManager.getAllProfiles();
+        const candidates = allProfiles.filter(p => {
+            if (!p.autoLaunch) {
+                return false;
+            }
+            if (!p.autoLaunchWorkspaces || p.autoLaunchWorkspaces.length === 0) {
+                return true;
+            }
+            return !!currentWorkspacePath && p.autoLaunchWorkspaces.includes(currentWorkspacePath);
+        });
+        if (candidates.length === 0) {
+            return;
+        }
+        const currentBranch = candidates.some(p => p.branchPattern) ? await (0, gitInfo_1.getCurrentBranch)() : undefined;
+        const autoLaunchProfiles = candidates.filter(p => {
+            if (!p.branchPattern) {
+                return true;
+            }
+            return !!currentBranch && (0, gitInfo_1.matchesBranchPattern)(currentBranch, p.branchPattern);
+        });
         for (const profile of autoLaunchProfiles) {
             await terminalManager.launchProfile(profile);
             telemetry.sendEvent('profile.autoLaunch');

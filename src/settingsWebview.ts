@@ -4,6 +4,7 @@ import { ProfileManager } from './profileManager';
 import { TerminalManager } from './terminalManager';
 import { WebviewMessage } from './types';
 import * as telemetry from './telemetry';
+import { getCurrentBranch } from './gitInfo';
 
 export class SettingsWebview {
   public static currentPanel: SettingsWebview | undefined;
@@ -70,6 +71,18 @@ export class SettingsWebview {
               profiles: this.profileManager.getAllProfiles(),
             });
             break;
+
+          case 'getWorkspaceInfo': {
+            const folder = vscode.workspace.workspaceFolders?.[0];
+            const branch = await getCurrentBranch();
+            this.panel.webview.postMessage({
+              command: 'workspaceInfo',
+              workspacePath: folder?.uri.fsPath,
+              workspaceName: folder?.name,
+              branch,
+            });
+            break;
+          }
 
           case 'saveProfile': {
             const isNew = !this.profileManager.getProfile(message.profile.id);
